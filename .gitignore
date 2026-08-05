@@ -1,0 +1,20 @@
+*.iml
+.gradle/
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+local.properties
+
+# Android Studio / IntelliJ
+.idea/
+*.hprof
+
+# Signing material — NEVER commit these.
+# Losing the upload keystore is unrecoverable; back it up outside the repo.
+*.jks
+*.keystore
+keystore.properties
+
+# macOS
+.DS_Store

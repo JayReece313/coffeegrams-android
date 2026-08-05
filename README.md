@@ -1,0 +1,91 @@
+# CoffeeGrams for Android
+
+Kotlin + Jetpack Compose port of **CoffeeGrams: Brew Calculator** — dose-and-ratio calculators and guided brew timers for six coffee methods, plus a brew log. By **JR Labs LLC**.
+
+The iOS original is live on the App Store and lives in a separate repo ([`JayReece313/coffeegrams`](https://github.com/JayReece313/coffeegrams)). **This port does not modify it.**
+
+| | |
+|---|---|
+| **Status** | Pre-development — planning complete, no code yet |
+| **Target** | Google Play, v1.0, feature parity with iOS 1.1 |
+| **Package** | `com.jrlabapps.coffeegrams` |
+| **Min / Target SDK** | 26 (Android 8.0) / 36 (Android 16) |
+| **Monetization** | One non-consumable, `com.jrlabapps.coffeegrams.pro`, $4.99 |
+| **Privacy** | No accounts, no ads, no analytics, no third-party SDKs — Data safety declares *no data collected* |
+
+---
+
+## How to work in here
+
+Written for a fresh Claude Code session that has never seen this repo.
+
+### How to start
+
+Open a new Claude Code session pointed at this directory, then **read [`PLAN.md`](PLAN.md) first** — it is the entry-point document. It contains the full feasibility analysis, cost breakdown, Google Play requirements, and the M0–M13 milestone list that all work is tracked against.
+
+Work **one milestone per session** (see Cost & context efficiency in `CLAUDE.md` at the `Apps/` level). Don't run one long multi-day session across milestones.
+
+### The rules
+
+- **Never push to `main`.** Every push goes to a **new, descriptively named branch**, then a PR into `main`.
+- One branch **per unit of work**, not per commit — multiple commits may share a branch.
+- Keep local `main` clean and matching the remote.
+- **Only commit or push when asked.**
+- A **Qodo review** runs on every push. Drive findings to **zero** before merging or calling a milestone done.
+- Debug **and** Release must build warning-free (warnings-as-errors on Release) before a milestone is done.
+
+### Where things live
+
+| Path | Purpose | When to edit |
+|---|---|---|
+| `PLAN.md` | The port plan: costs, Play requirements, M0–M13 milestones | When scope, costs, or milestone definitions change |
+| `README.md` | This file | When status, structure, or workflow changes |
+| `core/` | **Pure Kotlin** brewing logic — no Android imports | Porting or changing brewing math, timelines, timer state machine |
+| `app/` | Compose UI, ViewModels, Room, platform adapters | All UI and Android-specific work |
+| `ARCHITECTURE.md` | Codebase map with Mermaid diagrams | When layers or data flow change |
+| `DESIGN.md` | Palette, 60-30-10 rules, Material 3 mapping | When visual design changes |
+| `testing.md` | Test strategy and how to run each suite | When suites are added or commands change |
+| `Releases/submission_<version>.md` | As-built Play Store runbook | At each release |
+
+> `core/`, `app/`, and the doc set land in **M1–M2**; only `PLAN.md` and this README exist today.
+
+### The main workflow
+
+```bash
+# Pure logic — runs headless, no emulator, no device. This is the correctness gate.
+./gradlew :core:test
+
+# App unit tests
+./gradlew :app:testDebugUnitTest
+
+# Instrumented / Compose UI tests (emulator or device)
+./gradlew :app:connectedAndroidTest
+
+# Release build, warnings-as-errors
+./gradlew :app:assembleRelease
+```
+
+### Invariants that must stay in sync
+
+These are the cross-file consistency rules that break silently if ignored:
+
+- **`core/` must never import anything Android.** It is the direct counterpart of the iOS `CoffeeGramsCore` package and must stay headless and CLI-testable. An Android import here is a review-blocking defect.
+- **Brewing constants must match iOS exactly.** Ratios, bloom multipliers, steep times, pour counts, and shot windows come from `BrewMethodProfile` in the iOS repo. The 49 ported test cases are the conformance spec — if they pass, the port is faithful. Changing a constant means changing it on **both** platforms.
+- **Brew method raw strings are a persistence contract.** `v60`, `chemex`, `french_press`, `aeropress`, `cold_brew`, `espresso` are stored in the database as strings. Never rename them.
+- **The free-tier gate lives in one place** — `BrewMethod.isFreeTier` (French Press only). Widening the free tier is a one-line change there, not a UI condition.
+- **The IAP product ID `com.jrlabapps.coffeegrams.pro` must match** across the code, the Play Console listing, and the submission runbook.
+- **Play purchases must be acknowledged.** Unlike StoreKit's `finish()`, Play *auto-refunds* unacknowledged purchases. Never ship a billing change without re-verifying acknowledgement.
+- **Screenshots assert on-screen strings.** Renaming UI copy must fail a screenshot test rather than silently stale the store listing — same discipline as the iOS `capture.sh`.
+
+### Status / what's next
+
+As of **2026-08-05**:
+
+- ✅ Planning complete; plan approved.
+- ✅ Repo created (public); local + GitHub kanban boards populated with M0–M13.
+- ✅ D-U-N-S number already issued to JR Labs LLC — the usual 30-day lead time does not apply.
+- ⬜ **Next: M0** — register the Play Console organization account ($25 one time, no annual fee). Ensure the Google payments profile name/address matches the Dun & Bradstreet record exactly.
+- ⬜ **Then: M1** — Gradle scaffold and the `core` / `app` module split.
+- ⚠️ **Hardware gap:** Google Play Billing **cannot be tested on the emulator** — a physical Android device with the Play Store is required. Needed before **M8**. Budget ~$80–200.
+
+**Boards:** [GitHub project](https://github.com/users/JayReece313/projects/3) · local board `coffeegrams-android` in `~/Documents/claude_code/kanban_board` (`npm start`, then open `http://localhost:4317`).
