@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+      No INTERNET permission, by design. CoffeeGrams makes no network calls
+      outside Play Billing, which does not require one. Adding INTERNET here
+      would undermine the "no data collected" Data safety declaration.
+
+      Permissions added in later milestones:
+        M5 — POST_NOTIFICATIONS (runtime, API 33+) for the cold-brew reminder
+        M8 — com.android.vending.BILLING for the Pro unlock
+        M9 — FOREGROUND_SERVICE for guided-brew timer continuity
+    -->
+
+    <application
+        android:name=".CoffeeGramsApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.CoffeeGrams">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.CoffeeGrams"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
