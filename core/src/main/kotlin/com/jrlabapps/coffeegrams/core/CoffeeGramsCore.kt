@@ -10,7 +10,7 @@ package com.jrlabapps.coffeegrams.core
  *
  * Nothing in this module may import from `android.*` or `androidx.*`.
  */
-internal object CoffeeGramsCore {
+object CoffeeGramsCore {
     /** Matches the iOS app version this port targets parity with. */
     const val PARITY_TARGET: String = "iOS 1.1"
 }

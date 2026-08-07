@@ -39,4 +39,11 @@ tasks.withType<Test>().configureEach {
     testLogging {
         events("passed", "skipped", "failed")
     }
+
+    // False-green protection is Gradle's, not ours: `failOnNoDiscoveredTests`
+    // defaults to true in Gradle 9, so if test sources exist but the JUnit
+    // Platform discovers nothing — the failure mode if kotlin-test ever stopped
+    // resolving to its kotlin-test-junit5 variant — the task fails rather than
+    // reporting a green build that proved nothing. Verified by removing a @Test
+    // annotation and confirming the build fails. Do not set it to false.
 }

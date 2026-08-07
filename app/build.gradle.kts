@@ -83,7 +83,9 @@ dependencies {
 
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
-    testImplementation(libs.kotlin.test)
+    // Not libs.kotlin.test — see the catalog comment. AGP's built-in Kotlin does
+    // not auto-select the JUnit 5 variant, so ask for it by name.
+    testImplementation(libs.kotlin.test.junit5)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
     testRuntimeOnly(libs.junit.platform.launcher)
@@ -97,4 +99,8 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+
+    // See :core — Gradle 9's `failOnNoDiscoveredTests` covers the false-green
+    // case. ModuleWiringTest exists so this task has sources to discover, which
+    // is what arms that protection.
 }

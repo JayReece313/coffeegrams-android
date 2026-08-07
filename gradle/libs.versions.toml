@@ -2,8 +2,12 @@
 # Toolchain
 agp = "9.3.1"
 kotlin = "2.4.10"
-ksp = "2.3.11"
 jvmTarget = "17"
+# No KSP entry. Nothing applies it until M4 brings in Room, and KSP's versioning
+# changed schemes mid-flight — releases up to 2.2.21-2.0.5 pinned a Kotlin
+# version in the coordinate, while 2.3.x onward decoupled. That leaves no release
+# that names Kotlin 2.4.10, so any version pinned today is an unverifiable guess.
+# M4 picks one and validates it against the Kotlin in use then.
 
 # Android SDK levels.
 #
@@ -74,6 +78,11 @@ junit-bom = { module = "org.junit:junit-bom", version.ref = "junitBom" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+# :app must ask for the JUnit 5 variant explicitly. In :core the kotlin-jvm
+# plugin sees useJUnitPlatform() and resolves kotlin-test to kotlin-test-junit5
+# automatically; under AGP 9's built-in Kotlin that does not happen, and plain
+# kotlin-test has no `kotlin.test.Test`, so tests fail to compile.
+kotlin-test-junit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5", version.ref = "kotlin" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidxTestRunner" }
@@ -85,4 +94,3 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 # rejects the standalone plugin. https://kotl.in/gradle/agp-built-in-kotlin
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
