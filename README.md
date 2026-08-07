@@ -6,7 +6,7 @@ The iOS original is live on the App Store and lives in a separate repo ([`JayRee
 
 | | |
 |---|---|
-| **Status** | M2 complete — `:core` logic ported, 49/49 conformance tests green; design system (M3) is next |
+| **Status** | M3 complete — design system (palette, type, real brand mark) landed; persistence (M4) is next |
 | **Target** | Google Play, v1.0, feature parity with iOS 1.1 |
 | **Package** | `com.jrlabapps.coffeegrams` |
 | **Min / Target / Compile SDK** | 26 (Android 8.0) / 36 (Android 16) / 37.1 |
@@ -102,7 +102,8 @@ As of **2026-08-07**:
 - ✅ **M0** — Google Play developer account registered as an **organization** under JR Labs LLC. That account type is what exempts this app from the 12-tester / 14-day closed-test gate.
 - ✅ **M1** — Gradle scaffold, `:core` / `:app` module split, version catalog, CI, and the doc set (`ARCHITECTURE.md`, `DESIGN.md`, `testing.md`). All four gates green: `:core:test`, `:app:testDebugUnitTest`, debug build, release build.
 - ✅ **M2** — all 12 `CoffeeGramsCore` Swift sources ported to pure Kotlin, plus all 49 test cases (`BrewCalculatorTest` 11, `BrewMethodProfileTest` 7, `BrewTimelineBuilderTest` 11, `BrewTimerEngineTest` 20). All four gates green, `:core` compiles with `allWarningsAsErrors`.
-- ⬜ **Next: M3** — design system: map the 7 iOS color tokens onto a Material 3 `ColorScheme`, type scale, presentation mappings, adaptive icon.
+- ✅ **M3** — Material 3 `ColorScheme` (light + dark) and type scale from the 6 iOS color tokens, `BrewMethod`'s placeholder icon mapping ported, and the real adaptive icon + standalone logo mark transliterated from `coffeegrams_logo/render.swift` (replacing the M1 placeholder cup silhouette). All four gates green. Not yet checked on a running emulator/device — worth a quick visual pass next session.
+- ⬜ **Next: M4** — persistence: Room entity mirroring `BrewLogRecord`'s 11 columns, DAO, and the `BrewLogStoring` port + in-memory test double.
 - ⚠️ **Hardware gap:** Google Play Billing **cannot be tested on the emulator** — a physical Android device with the Play Store is required. Needed before **M8**. Budget ~$80–200.
 - ⬜ **Still to confirm in Play Console:** Small Business Program opt-in (15% rate — it is *not* automatic), and that organization verification has cleared.
 

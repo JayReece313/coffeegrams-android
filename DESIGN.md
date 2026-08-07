@@ -113,7 +113,25 @@ iOS design would be wrong:
 
 ## Status
 
-As of **2026-08-07**: the palette above is extracted and recorded, and the
-placeholder adaptive icon uses the real Cream and Espresso Brown values. The
-Compose `ColorScheme`, type scale, and vectorised logo are **M3** work — the
-theme in `ui/theme/Theme.kt` is currently M3 defaults, not the brand palette.
+As of **2026-08-07**: **M3 complete.** `ui/theme/Theme.kt` implements the real
+`ColorScheme` (light + dark) from the mapping table above; `ui/theme/Type.kt`
+carries the hero-numeral `displayLarge` style; `design/BrewMethodPresentation.kt`
+ports `BrewMethod`'s placeholder icon mapping from the iOS app's
+`BrewMethod+Presentation.swift`. The adaptive icon (`ic_launcher_foreground.xml`)
+and a standalone full-bleed `logo_mark.xml` are both transliterated from
+`coffeegrams_logo/render.swift`'s exact procedural geometry — the real brand
+mark (a tilted balance scale weighed down by a pan of coffee beans), not the
+placeholder cup silhouette. `ic_launcher_background.xml` is Cream, matching
+render.swift's actual icon background (the placeholder used Espresso Brown,
+which was correct *for* the placeholder's cream-line-art-on-dark treatment but
+wrong for the real mark's own gold/espresso fills).
+
+Verified via a scratch script rendering the same path data as SVG (same
+grammar VectorDrawable's `pathData` uses) and confirmed visually; the actual
+Gradle/AAPT build compiles the vectors cleanly and `:app:assembleRelease`
+(warnings-as-errors, lintVital, R8) passes. Not yet verified on a running
+emulator/device — worth a quick visual pass next time one is available.
+
+The custom method icon set (`design/BrewMethodPresentation.kt`'s real
+replacement for the Material Symbols placeholders) remains **M11** work, per
+this doc's original sequencing.

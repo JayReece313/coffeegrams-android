@@ -59,6 +59,11 @@ compose-ui = { module = "androidx.compose.ui:ui" }
 compose-ui-graphics = { module = "androidx.compose.ui:ui-graphics" }
 compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+# M3 method-icon placeholders — DESIGN.md's Android equivalent of iOS's "SF
+# Symbols as immediate placeholders until the custom vector set exists" (M11).
+# First-party Google, no Data safety impact; R8 + shrinkResources on release
+# tree-shakes the pool down to only the handful of icons actually referenced.
+compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 
