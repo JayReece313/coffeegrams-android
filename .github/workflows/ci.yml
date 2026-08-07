@@ -30,10 +30,22 @@ jobs:
 
       # compileSdk is 37.1 (see gradle/libs.versions.toml for why it differs
       # from targetSdk). The runner image does not ship it, so install it.
+      # The runner image ships the SDK under $ANDROID_HOME but does not put
+      # sdkmanager on PATH, so resolve it explicitly rather than assuming.
       - name: Install Android SDK components
         run: |
-          yes | sdkmanager --licenses > /dev/null
-          sdkmanager "platforms;android-37.1" "build-tools;37.0.0" "platform-tools"
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER=$(find "$ANDROID_HOME" -name sdkmanager -type f -perm -u+x 2>/dev/null | head -1)
+          fi
+          if [ -z "$SDKMANAGER" ]; then
+            echo "::error::sdkmanager not found under ANDROID_HOME=$ANDROID_HOME"
+            exit 1
+          fi
+          echo "Using $SDKMANAGER"
+          # `yes` exits on SIGPIPE once sdkmanager stops reading; that is expected.
+          yes | "$SDKMANAGER" --licenses > /dev/null 2>&1 || true
+          "$SDKMANAGER" "platforms;android-37.1" "build-tools;37.0.0" "platform-tools"
 
       # INVARIANT: :core is the pure-logic module and must stay headless so it
       # runs from the CLI with no emulator. An Android import here is a
