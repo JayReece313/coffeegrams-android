@@ -45,6 +45,10 @@ object BrewTimelineBuilder {
         val numPours = maxOf(1, profile.numPours ?: 2)
         val pourInterval = profile.pourIntervalSeconds ?: 45
 
+        // doseGrams/ratio are used raw here, matching iOS exactly — this
+        // builder never clamps them (only buildEspressoTarget does).
+        // Bounding to sane ranges is the caller's job (UI slider bounds
+        // before :core is ever reached), same contract on both platforms.
         val bloomWater = doseGrams * bloomMultiplier
         val remainingWater = maxOf(0.0, totalWater - bloomWater)
         val pourAmount = remainingWater / numPours

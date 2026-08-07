@@ -69,6 +69,11 @@ sealed class BrewStep {
             is Stir -> durationSeconds
             is Wait -> durationSeconds
             is Plunge -> null
+            // 0, not a real timed duration, matches iOS exactly. No shipping
+            // timeline on either platform ever constructs Drawdown(false) —
+            // every builder only produces the manual (untilDripsStop = true)
+            // case — so this branch is reachable in the type but dead in
+            // practice on both platforms.
             is Drawdown -> if (untilDripsStop) null else 0
         }
 
