@@ -92,6 +92,24 @@ class BrewCalculatorTest {
     }
 
     @Test
+    fun `NaN input is guarded, matching iOS's guard-greater-than semantics`() {
+        // Regression test: a naive `<= 0` guard does NOT catch NaN (all
+        // relational comparisons with NaN are false under IEEE 754), so it
+        // must be written as a negated `> 0` check, matching iOS's
+        // `guard doseGrams > 0, ratio > 0 else { return 0 }` exactly.
+        assertEquals(0.0, BrewCalculator.waterGrams(doseGrams = Double.NaN, ratio = 16.0))
+        assertEquals(0.0, BrewCalculator.waterGrams(doseGrams = 18.0, ratio = Double.NaN))
+        assertEquals(
+            0.0,
+            BrewCalculator.doseGrams(targetYieldGrams = Double.NaN, ratio = 16.0, method = BrewMethod.V60),
+        )
+        assertEquals(
+            0.0,
+            BrewCalculator.doseGrams(targetYieldGrams = 300.0, ratio = Double.NaN, method = BrewMethod.V60),
+        )
+    }
+
+    @Test
     fun `zero target yield yields zero dose`() {
         assertEquals(0.0, BrewCalculator.doseGrams(targetYieldGrams = 0.0, ratio = 16.0, method = BrewMethod.V60))
     }

@@ -22,7 +22,12 @@ object BrewCalculator {
      * negative weight.
      */
     fun waterGrams(doseGrams: Double, ratio: Double): Double {
-        if (doseGrams <= 0 || ratio <= 0) return 0.0
+        // Written as a negated `>` guard, not `<= 0`, to match iOS's
+        // `guard doseGrams > 0, ratio > 0 else { return 0 }` exactly: under
+        // IEEE 754, `NaN > 0` is false (so the guard fails and returns 0),
+        // but `NaN <= 0` is *also* false, so a `<= 0` check would let NaN
+        // fall through to the multiply below instead of being caught here.
+        if (!(doseGrams > 0 && ratio > 0)) return 0.0
         return doseGrams * ratio
     }
 
@@ -45,7 +50,8 @@ object BrewCalculator {
      * `yield / ratio` = dose — though the espresso UI is driven dose-first.
      */
     fun doseGrams(targetYieldGrams: Double, ratio: Double, method: BrewMethod): Double {
-        if (targetYieldGrams <= 0 || ratio <= 0) return 0.0
+        // Same NaN-safe negated-`>` guard as waterGrams — see its comment.
+        if (!(targetYieldGrams > 0 && ratio > 0)) return 0.0
 
         return when (method) {
             BrewMethod.V60, BrewMethod.CHEMEX, BrewMethod.COLD_BREW, BrewMethod.ESPRESSO ->
