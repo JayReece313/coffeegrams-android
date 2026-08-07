@@ -6,7 +6,7 @@ The iOS original is live on the App Store and lives in a separate repo ([`JayRee
 
 | | |
 |---|---|
-| **Status** | M1 complete — Gradle scaffold, module split and CI in place; `:core` logic port (M2) is next |
+| **Status** | M2 complete — `:core` logic ported, 49/49 conformance tests green; design system (M3) is next |
 | **Target** | Google Play, v1.0, feature parity with iOS 1.1 |
 | **Package** | `com.jrlabapps.coffeegrams` |
 | **Min / Target / Compile SDK** | 26 (Android 8.0) / 36 (Android 16) / 37.1 |
@@ -101,7 +101,8 @@ As of **2026-08-07**:
 - ✅ D-U-N-S number already issued to JR Labs LLC — the usual 30-day lead time does not apply.
 - ✅ **M0** — Google Play developer account registered as an **organization** under JR Labs LLC. That account type is what exempts this app from the 12-tester / 14-day closed-test gate.
 - ✅ **M1** — Gradle scaffold, `:core` / `:app` module split, version catalog, CI, and the doc set (`ARCHITECTURE.md`, `DESIGN.md`, `testing.md`). All four gates green: `:core:test`, `:app:testDebugUnitTest`, debug build, release build.
-- ⬜ **Next: M2** — port the 12 `CoffeeGramsCore` Swift sources to pure Kotlin, plus all 49 test cases. `:core` must be green from the CLI before any UI is written.
+- ✅ **M2** — all 12 `CoffeeGramsCore` Swift sources ported to pure Kotlin, plus all 49 test cases (`BrewCalculatorTest` 11, `BrewMethodProfileTest` 7, `BrewTimelineBuilderTest` 11, `BrewTimerEngineTest` 20). All four gates green, `:core` compiles with `allWarningsAsErrors`.
+- ⬜ **Next: M3** — design system: map the 7 iOS color tokens onto a Material 3 `ColorScheme`, type scale, presentation mappings, adaptive icon.
 - ⚠️ **Hardware gap:** Google Play Billing **cannot be tested on the emulator** — a physical Android device with the Play Store is required. Needed before **M8**. Budget ~$80–200.
 - ⬜ **Still to confirm in Play Console:** Small Business Program opt-in (15% rate — it is *not* automatic), and that organization verification has cleared.
 

@@ -43,15 +43,17 @@ identical ratios, timelines, and step transitions on both platforms.
 
 If this suite is red, nothing else is worth running.
 
-Coverage, once M2 lands:
+Coverage, as of M2 (2026-08-07) — 49 cases across 4 files:
 
-| Area | What is asserted |
-|---|---|
-| `BrewCalculator` | Dose ↔ water ↔ ratio in all three solve directions, rounding, bounds |
-| `BrewMethodProfile` | All six profile constants — the brewing reference table |
-| `BrewTimelineBuilder` | Step order, durations, bloom multipliers, pour counts, totals |
-| `BrewTimerEngine` | 20 cases: step transitions, fast-forward by large deltas, pause/resume, completion |
-| `EspressoTarget` / `ColdBrew` | Shot windows, steep times, dilution |
+| Area | What is asserted | Cases |
+|---|---|---|
+| `BrewCalculator` | Dose ↔ water ↔ ratio in all three solve directions, rounding, bounds | 11 |
+| `BrewMethodProfile` | All six profile constants — the brewing reference table | 7 |
+| `BrewTimelineBuilder` | Step order, durations, bloom multipliers, pour counts, totals, espresso window, cold-brew notify time | 11 |
+| `BrewTimerEngine` | Step transitions, fast-forward by large deltas, pause/resume, overrun, completion | 20 |
+
+`EspressoTarget` / `ColdBrewPlan` are exercised through `BrewTimelineBuilderTest` rather than
+their own file, mirroring the iOS suite layout.
 
 ### 2. `:app` unit tests — ViewModels and adapters
 

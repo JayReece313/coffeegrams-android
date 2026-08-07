@@ -4,10 +4,11 @@ Two layers: a **pure Kotlin logic module** under a **thin Compose app**. Every
 side effect crosses a port. This mirrors the iOS app deliberately — the shared
 shape is what makes the two codebases maintainable in parallel.
 
-> **Status (2026-08-07):** M1 complete — the module split, build, and CI exist.
-> The boxes marked *(M2)*…*(M9)* below are the intended structure, not yet
-> written. This document describes the target and is updated as each milestone
-> lands.
+> **Status (2026-08-07):** M2 complete — `:core` is fully ported: all 12 Models
+> / Logic files and the `MonotonicClock` port, plus all 49 conformance tests
+> (`./gradlew :core:test`, headless, warnings-as-errors). The boxes marked
+> *(M3)*…*(M9)* below are still the intended structure, not yet written. This
+> document describes the target and is updated as each milestone lands.
 
 ---
 
@@ -22,9 +23,9 @@ graph TD
     end
 
     subgraph core[":core — pure Kotlin, no Android"]
-        M["Models<br/>BrewMethod · BrewMethodProfile · BrewStep<br/>EspressoTarget · ColdBrew · BrewLogEntry"]
-        L["Logic<br/>BrewCalculator · BrewTimelineBuilder<br/>BrewTimerEngine"]
-        P["Ports (interfaces)<br/>MonotonicClock · BrewLogStoring<br/>Haptics · Notifications · Purchases"]
+        M["Models — done<br/>BrewMethod · BrewType · BrewMethodProfile · BrewStep<br/>EspressoTarget · ColdBrew · BrewLogEntry"]
+        L["Logic — done<br/>BrewCalculator · BrewTimeline · BrewTimelineBuilder<br/>BrewTimerEngine"]
+        P["Ports (interfaces)<br/>MonotonicClock — done<br/>BrewLogStoring · Haptics · Notifications · Purchases — M4/M5/M8"]
     end
 
     UI --> VM
@@ -55,7 +56,7 @@ emulator, and what made the iOS→Android port cheap in the first place.
 
 | Port *(in `:core`)* | Live adapter *(in `:app`)* | Test double | Milestone |
 |---|---|---|---|
-| `MonotonicClock` | `SystemClock.elapsedRealtime()` | Fake advancing clock | M5 |
+| `MonotonicClock` — **ported (M2)** | `SystemClock.elapsedRealtime()` | Fake advancing clock | M5 |
 | `BrewLogStoring` | Room DAO | In-memory list | M4 |
 | `Haptics` | `VibratorManager` / `HapticFeedbackConstants` | Recording spy | M5 |
 | `Notifications` | Channel + WorkManager | Recording spy | M5 |
