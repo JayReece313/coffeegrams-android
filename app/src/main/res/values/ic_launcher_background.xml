@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Espresso Brown — the iOS TextPrimary (light) token. See DESIGN.md. -->
+    <color name="ic_launcher_background">#3A2A1E</color>
+</resources>

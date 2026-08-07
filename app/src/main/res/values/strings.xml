@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      English only, matching the iOS app's 49 keys. The Play listing title is
+      "CoffeeGrams: Brew Calculator" (28 chars, within Play's 30-char limit);
+      app_name is the shorter launcher label.
+    -->
+    <string name="app_name">CoffeeGrams</string>
+</resources>
