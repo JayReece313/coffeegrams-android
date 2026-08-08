@@ -4,11 +4,15 @@ Two layers: a **pure Kotlin logic module** under a **thin Compose app**. Every
 side effect crosses a port. This mirrors the iOS app deliberately — the shared
 shape is what makes the two codebases maintainable in parallel.
 
-> **Status (2026-08-07):** M2 complete — `:core` is fully ported: all 12 Models
-> / Logic files and the `MonotonicClock` port, plus all 49 conformance tests
-> (`./gradlew :core:test`, headless, warnings-as-errors). The boxes marked
-> *(M3)*…*(M9)* below are still the intended structure, not yet written. This
-> document describes the target and is updated as each milestone lands.
+> **Status (2026-08-07):** M2 and M3 complete. `:core` is fully ported: all 12
+> Models/Logic files and the `MonotonicClock` port, plus all 49 conformance
+> tests (`./gradlew :core:test`, headless, warnings-as-errors). The Compose
+> theme (`ui/theme/`) carries the real palette and type scale, `BrewMethod`'s
+> placeholder icon mapping is ported (`design/`), and the adaptive icon +
+> standalone logo mark are the real brand mark, transliterated from the iOS
+> repo's `render.swift`. The boxes marked *(M4)*…*(M9)* below are still the
+> intended structure, not yet written. This document is updated as each
+> milestone lands.
 
 ---
 
@@ -138,7 +142,9 @@ See [`testing.md`](testing.md) for how to run each suite.
 | `core/src/main/kotlin/com/jrlabapps/coffeegrams/core/` | Models, calculator, timeline builder, timer engine, ports |
 | `core/src/test/kotlin/.../core/` | The ported conformance suite |
 | `app/src/main/kotlin/com/jrlabapps/coffeegrams/` | `MainActivity`, `CoffeeGramsApplication` |
-| `app/src/main/kotlin/.../ui/theme/` | Compose theme — palette, type *(M3)* |
+| `app/src/main/kotlin/.../ui/theme/` | Compose theme — palette, type scale |
+| `app/src/main/kotlin/.../design/` | App-layer presentation mappings (`BrewMethod`'s placeholder icon), mirrors iOS's `Design/` folder |
+| `app/src/main/res/drawable/ic_launcher_foreground.xml`, `logo_mark.xml` | The real brand mark (adaptive icon + standalone), transliterated from `coffeegrams_logo/render.swift` |
 | `app/src/main/kotlin/.../ui/` | Screens and composables *(M7)* |
 | `app/src/main/kotlin/.../data/` | Room entity, DAO, `BrewLogStoring` adapter *(M4)* |
 | `app/src/main/kotlin/.../platform/` | Clock, haptics, notification adapters *(M5)* |

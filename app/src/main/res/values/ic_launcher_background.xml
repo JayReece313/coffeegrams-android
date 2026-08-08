@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Espresso Brown — the iOS TextPrimary (light) token. See DESIGN.md. -->
-    <color name="ic_launcher_background">#3A2A1E</color>
+    <!--
+      Cream — matches coffeegrams_logo/render.swift's actual icon background
+      (a cream gradient) and DESIGN.md's Background/Light token (#F4EADB).
+      The mark itself (ic_launcher_foreground.xml) carries its own gold/
+      espresso fill colors and needs a light backdrop for contrast — not the
+      dark Espresso Brown used behind the old placeholder cup silhouette,
+      which was cream-on-dark and would make most of the real mark blend
+      into a matching-color background.
+    -->
+    <color name="ic_launcher_background">#F4EADB</color>
 </resources>

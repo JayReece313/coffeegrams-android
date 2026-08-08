@@ -1,29 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  CoffeeGrams brand mark — a tilted balance scale weighed down by a pan of
-  coffee beans, transliterated from coffeegrams_logo/render.swift's exact
-  procedural geometry (same numeric coordinates, converted from
-  CoreGraphics' bottom-left/Y-up canvas to VectorDrawable's top-left/Y-down
-  canvas). Scaled and centered to fill 85% of the adaptive icon's
-  66dp safe zone within the 108dp canvas.
+  CoffeeGrams brand mark, full-bleed (no adaptive-icon safe-zone inset) — for
+  general in-app use (e.g. a future branded header, DESIGN.md's deferred
+  "cream bar + espresso large title" navigation treatment). Same geometry as
+  ic_launcher_foreground.xml; see that file's header comment for provenance
+  and the note on why its colors are render.swift's own constants rather
+  than DESIGN.md's UI tokens.
 
-  Colors are render.swift's own gold/espresso constants, not DESIGN.md's UI
-  tokens (Accent #C6852E, TextPrimary #3A2A1E) — close but not identical on
-  purpose. This asset's job is pixel parity with the actual shipping iOS App
-  Store icon, which render.swift produced with these exact values; DESIGN.md's
-  tokens govern live UI chrome (buttons, text), a separate concern the icon
-  artwork was tuned independently from.
+  android:width/height is an intrinsic-size hint only — vector drawables are
+  resolution-independent, so any consumer can override the display size via
+  Modifier.size() without quality loss.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
+    android:width="240dp"
+    android:height="240dp"
     android:viewportWidth="1024"
     android:viewportHeight="1024">
-    <group
-        android:scaleX="0.815936"
-        android:scaleY="0.815936"
-        android:translateX="94.2406"
-        android:translateY="58.7834">
         <path
             android:fillColor="#CD8B32"
             android:pathData="M386,732 h252 a24,24 0 0 1 24,24 v8 a24,24 0 0 1 -24,24 h-252 a24,24 0 0 1 -24,-24 v-8 a24,24 0 0 1 24,-24 z" />
@@ -130,5 +122,4 @@
             android:strokeColor="#CD8B32"
             android:strokeWidth="5.22"
             android:strokeLineCap="round" />
-    </group>
 </vector>

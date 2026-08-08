@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Placeholder adaptive icon. M3 replaces the foreground with the real CoffeeGrams
-  mark, re-derived as a vector from coffeegrams_logo/ in the iOS repo.
-
   minSdk is 26, so the adaptive icon is the only variant needed — there is no
-  pre-Oreo fallback to maintain.
+  pre-Oreo fallback to maintain. Foreground/monochrome share one drawable;
+  see ic_launcher_foreground.xml for provenance and the monochrome-tinting
+  rationale.
 -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@color/ic_launcher_background" />
