@@ -9,6 +9,9 @@ import androidx.compose.material.icons.filled.LocalCafe
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.jrlabapps.coffeegrams.core.BrewMethod
+import com.jrlabapps.coffeegrams.core.BrewMethodProfile
+import com.jrlabapps.coffeegrams.core.BrewType
+import java.util.Locale
 
 /**
  * App-layer presentation details for the domain's [BrewMethod]. These live in
@@ -30,4 +33,22 @@ val BrewMethod.icon: ImageVector
         BrewMethod.AEROPRESS -> Icons.Filled.Medication // plunger tube
         BrewMethod.COLD_BREW -> Icons.Filled.AcUnit // served cold
         BrewMethod.ESPRESSO -> Icons.Filled.Coffee
+    }
+
+/** Method-picker row subtitle, e.g. "Pour-over · default 1:16". */
+val BrewMethod.subtitle: String
+    get() {
+        val profile = BrewMethodProfile.profile(this)
+        val brewTypeLabel = when (profile.brewType) {
+            BrewType.PULSE_POUR -> "Pour-over"
+            BrewType.IMMERSION -> "Immersion"
+            BrewType.PRESSURE -> "Pressure"
+        }
+        val ratio = profile.defaultRatio
+        val ratioText = if (ratio == Math.floor(ratio)) {
+            String.format(Locale.US, "%.0f", ratio)
+        } else {
+            String.format(Locale.US, "%.1f", ratio)
+        }
+        return "$brewTypeLabel · default 1:$ratioText"
     }

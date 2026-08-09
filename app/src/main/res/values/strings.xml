@@ -6,4 +6,40 @@
       app_name is the shorter launcher label.
     -->
     <string name="app_name">CoffeeGrams</string>
+
+    <!--
+      M7 PR1. Naming convention: <screen>_<element>, snake_case, matching the
+      package each screen lives under in ui/. Documented in ARCHITECTURE.md
+      for PR2/PR3 and future milestones to follow.
+    -->
+
+    <!-- Method picker -->
+    <string name="method_picker_unlock_pro">Unlock Pro</string>
+    <string name="method_picker_pro_badge">PRO</string>
+    <string name="method_picker_locked_description">%1$s, Pro, locked</string>
+    <string name="method_picker_locked_hint">Unlock with CoffeeGrams Pro</string>
+    <string name="method_picker_unlocked_hint">Opens the %1$s calculator</string>
+
+    <!-- Calculator -->
+    <string name="calculator_input_label_dose">Coffee dose (g)</string>
+    <string name="calculator_input_label_target">Target %1$s (g)</string>
+    <string name="calculator_ratio_label">Ratio %1$s</string>
+    <string name="calculator_ratio_content_description">Brew ratio</string>
+    <string name="calculator_result_description">%1$s, %2$d grams</string>
+    <string name="calculator_start_pour_over">Set Up Brew</string>
+    <string name="calculator_start_espresso">Set Up Shot</string>
+    <string name="calculator_start_cold_brew">View Plan</string>
+
+    <!-- Paywall -->
+    <string name="paywall_title">CoffeeGrams Pro</string>
+    <string name="paywall_subtitle">Unlock every brew method, guided timers, and your full brew log.</string>
+    <string name="paywall_benefit_all_methods">All 6 brew methods</string>
+    <string name="paywall_benefit_guided_timers">Guided step-by-step timers</string>
+    <string name="paywall_benefit_full_log">Full brew log history</string>
+    <string name="paywall_benefit_one_time">One-time purchase, no subscription</string>
+    <string name="paywall_buy_button">Unlock Everything</string>
+    <string name="paywall_buy_button_with_price">Unlock Everything · %1$s</string>
+    <string name="paywall_working">Please wait…</string>
+    <string name="paywall_restore_button">Restore Purchase</string>
+    <string name="paywall_footnote">A one-time purchase. No account required.</string>
 </resources>

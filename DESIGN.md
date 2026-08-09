@@ -81,6 +81,23 @@ Non-negotiables:
 
 ---
 
+## Spacing & shape
+
+No spacing/corner-radius scale existed before M7 — screens simply didn't
+exist yet. This is the scale `ui/theme/Spacing.kt` implements, ported from
+the iOS app's own ad hoc screen measurements (not invented):
+
+| Token | Value | Use |
+|---|---|---|
+| `screenPadding` | 24dp | Outer padding on every screen's content |
+| `cardPadding` | 16dp | Inner padding on cards/rows |
+| `cardCornerRadius` | 16dp | Corner radius on cards/rows |
+| `itemSpacing` | 16dp | Spacing between distinct sections/rows |
+| `smallSpacing` | 8dp | Spacing between closely-related elements (icon + label, chip row) |
+| `buttonVerticalPadding` | 14dp | Vertical padding inside primary buttons |
+
+---
+
 ## Motion and feedback
 
 - When a brew phase counts down, the large clock numerals shift from
@@ -135,3 +152,10 @@ emulator/device — worth a quick visual pass next time one is available.
 The custom method icon set (`design/BrewMethodPresentation.kt`'s real
 replacement for the Material Symbols placeholders) remains **M11** work, per
 this doc's original sequencing.
+
+**M7 PR1 (2026-08-09):** the first real screens exist — Method Picker
+(with the Pro gate), Calculator, and Paywall — verified visually on the
+`coffeegrams_api34` emulator, not just compiled. The "Spacing & shape"
+section above is new, established for this milestone. PR2 (Guided
+Brew/Espresso/Cold Brew) and PR3 (brew log) are still to come under the
+same M7 board card.

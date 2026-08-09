@@ -147,10 +147,20 @@ real (in-memory-mode) Room database, proving the actual SQL, `TypeConverters`
 (`UUID`↔`TEXT`, `Instant`↔epoch-millis `INTEGER`), and DAO wiring are correct,
 not just the interface contract in isolation.
 
-**Compose UI tests (M7):** the five screens — the Pro gate on the method
-picker, calculator input and output, guided-brew step rendering, the brew log
-and its star rating. Also asserts TalkBack content descriptions — a numeric
-readout with no label is a defect, not a nice-to-have.
+**Compose UI tests (M7 PR1), landed:** 11 cases across 3 files, the first
+Compose UI tests in the repo (no prior precedent to follow — uses
+`androidx.compose.ui.test.junit4.v2.createComposeRule`, the current
+non-deprecated API). `MethodPickerScreenTest` (3) — an unlocked method
+navigates, a locked one opens the paywall instead of navigating, the
+toolbar "Unlock Pro" action also opens it. `CalculatorScreenTest` (5) —
+mode toggle switches the input label, the ratio slider carries a content
+description ("Brew ratio" — the concrete "numeric readout needs a label"
+case), the CTA renders disabled with its method-specific label (still
+unwired — its destination doesn't exist until PR2), AeroPress presets
+render. `PaywallScreenTest` (3) — all 4 benefits render, the buy button
+never fabricates a price when `priceText` is null, restore doesn't dismiss
+the sheet when there's nothing to restore. Remaining screens (guided brew,
+espresso, cold brew, brew log + star rating) get theirs in PR2/PR3.
 
 ### 4. Build gates
 

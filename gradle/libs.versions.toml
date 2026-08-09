@@ -35,9 +35,15 @@ lifecycle = "2.11.0"
 room = "2.8.4"
 work = "2.11.2"
 billing = "9.1.0"
+# M7 navigation. 2.9.8 is the latest stable per maven-metadata.xml (verified,
+# not guessed — 2.10.0 is beta-only as of this writing).
+navigationCompose = "2.9.8"
 
 # Kotlin runtime
 coroutines = "1.11.0"
+# M7 type-safe Navigation Compose routes. 1.11.0 is the latest stable per
+# the kotlinx.serialization GitHub releases page (verified, not guessed).
+serialization = "1.11.0"
 
 # Test
 junitBom = "6.1.2"
@@ -54,6 +60,8 @@ androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx"
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
 compose-material3 = { module = "androidx.compose.material3:material3" }
@@ -101,4 +109,5 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 # rejects the standalone plugin. https://kotl.in/gradle/agp-built-in-kotlin
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
