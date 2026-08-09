@@ -37,21 +37,28 @@ class ColdBrewViewModel(
     val waterGrams: Double get() = BrewCalculator.waterGrams(doseGrams, ratio)
 
     /**
-     * Check permission and schedule the "steep done" reminder. If
-     * permission is denied we degrade gracefully — the user can still
-     * brew, just without the reminder.
-     *
-     * On Android, [NotificationScheduling.requestAuthorization] only
-     * *checks* current permission state — it cannot show the system
-     * prompt (that requires an Activity/Compose composition). The caller
-     * (the cold-brew screen, M7) is responsible for requesting the real
-     * `POST_NOTIFICATIONS` permission — e.g. on first use of this screen —
-     * *before* calling [startSteep], or this will read as denied on a
-     * fresh install even for a user who would have said yes.
+     * Whether reminders are currently allowed, per the OS's current
+     * permission state. Does **not** prompt — on Android the system
+     * permission dialog can only be shown from an Activity/Compose
+     * composition, never from a plain class (see
+     * [NotificationScheduling.requestAuthorization]). The caller (the
+     * cold-brew screen, M7) calls this first; if it's `false`, the screen
+     * shows the real system prompt itself (e.g. via
+     * `rememberLauncherForActivityResult`) and passes the result to
+     * [startSteep].
      */
-    suspend fun startSteep() {
-        val granted = notifications.requestAuthorization()
-        if (!granted) {
+    fun canScheduleReminders(): Boolean = notifications.requestAuthorization()
+
+    /**
+     * Schedule the "steep done" reminder if [permissionGranted], else
+     * degrade gracefully — the user can still brew, just without the
+     * reminder. Takes the permission result as a parameter rather than
+     * checking it itself, so this class never implies it can request the
+     * system permission — only the caller, from a real UI context, can
+     * actually obtain a "yes" it didn't already have.
+     */
+    suspend fun startSteep(permissionGranted: Boolean) {
+        if (!permissionGranted) {
             _reminderState.value = ReminderState.Denied
             return
         }
