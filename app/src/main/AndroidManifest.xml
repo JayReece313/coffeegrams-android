@@ -7,10 +7,21 @@
       would undermine the "no data collected" Data safety declaration.
 
       Permissions added in later milestones:
-        M5 — POST_NOTIFICATIONS (runtime, API 33+) for the cold-brew reminder
         M8 — com.android.vending.BILLING for the Pro unlock
         M9 — FOREGROUND_SERVICE for guided-brew timer continuity
     -->
+
+    <!--
+      Runtime permission (API 33+) for the cold-brew / French-press
+      reminder. Declaring it here only makes the system *permission*
+      requestable — the actual request prompt is triggered from Compose UI
+      (M7) via rememberLauncherForActivityResult; on earlier API levels
+      notifications are allowed by default and this permission is a no-op.
+    -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Normal (not runtime) permission — required for LiveHaptics's Vibrator calls. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:name=".CoffeeGramsApplication"
