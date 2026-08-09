@@ -1,6 +1,6 @@
 package com.jrlabapps.coffeegrams.ui.calculator
 
-import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -8,6 +8,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextReplacement
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.jrlabapps.coffeegrams.core.BrewMethod
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -19,7 +20,7 @@ class CalculatorScreenTest {
 
     @Test
     fun modeToggleSwitchesTheInputLabel() {
-        composeTestRule.setContent { CalculatorScreen(method = BrewMethod.V60) }
+        composeTestRule.setContent { CalculatorScreen(method = BrewMethod.V60, onStartBrew = { _, _ -> }) }
 
         composeTestRule.onNodeWithText("Coffee dose (g)").assertExists()
 
@@ -30,28 +31,45 @@ class CalculatorScreenTest {
 
     @Test
     fun ratioSliderHasAContentDescription() {
-        composeTestRule.setContent { CalculatorScreen(method = BrewMethod.V60) }
+        composeTestRule.setContent { CalculatorScreen(method = BrewMethod.V60, onStartBrew = { _, _ -> }) }
 
         composeTestRule.onNodeWithContentDescription("Brew ratio").assertExists()
     }
 
     @Test
-    fun ctaIsDisabledAndLabelledPerMethod() {
-        composeTestRule.setContent { CalculatorScreen(method = BrewMethod.ESPRESSO) }
+    fun ctaIsEnabledAndLabelledPerMethod() {
+        composeTestRule.setContent { CalculatorScreen(method = BrewMethod.ESPRESSO, onStartBrew = { _, _ -> }) }
 
-        composeTestRule.onNodeWithText("Set Up Shot").assertIsNotEnabled()
+        composeTestRule.onNodeWithText("Set Up Shot").assertIsEnabled()
     }
 
     @Test
     fun ctaLabelForColdBrewIsViewPlan() {
-        composeTestRule.setContent { CalculatorScreen(method = BrewMethod.COLD_BREW) }
+        composeTestRule.setContent { CalculatorScreen(method = BrewMethod.COLD_BREW, onStartBrew = { _, _ -> }) }
 
-        composeTestRule.onNodeWithText("View Plan").assertIsNotEnabled()
+        composeTestRule.onNodeWithText("View Plan").assertIsEnabled()
+    }
+
+    @Test
+    fun ctaPassesEffectiveDoseAndRatio() {
+        var startedDose: Double? = null
+        var startedRatio: Double? = null
+        composeTestRule.setContent {
+            CalculatorScreen(
+                method = BrewMethod.V60,
+                onStartBrew = { dose, ratio -> startedDose = dose; startedRatio = ratio },
+            )
+        }
+
+        composeTestRule.onNodeWithText("Set Up Brew").performClick()
+
+        assertEquals(18.0, startedDose)
+        assertEquals(16.0, startedRatio)
     }
 
     @Test
     fun presetsShowOnlyForAeroPress() {
-        composeTestRule.setContent { CalculatorScreen(method = BrewMethod.AEROPRESS) }
+        composeTestRule.setContent { CalculatorScreen(method = BrewMethod.AEROPRESS, onStartBrew = { _, _ -> }) }
 
         composeTestRule.onNodeWithText("Hoffmann").assertExists()
     }
@@ -60,7 +78,7 @@ class CalculatorScreenTest {
     fun commaDecimalInputIsParsed() {
         // The decimal keyboard shows the device locale's own separator; a
         // comma must update state exactly like a period does.
-        composeTestRule.setContent { CalculatorScreen(method = BrewMethod.V60) }
+        composeTestRule.setContent { CalculatorScreen(method = BrewMethod.V60, onStartBrew = { _, _ -> }) }
 
         composeTestRule.onNodeWithText("18").performTextReplacement("18,5")
 

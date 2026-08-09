@@ -47,10 +47,13 @@ import com.jrlabapps.coffeegrams.viewmodel.CalculatorViewModel
 import java.util.Locale
 import kotlin.math.roundToInt
 
-/** The CTA doesn't navigate yet — the brew-session router lands in PR2. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CalculatorScreen(method: BrewMethod, modifier: Modifier = Modifier) {
+fun CalculatorScreen(
+    method: BrewMethod,
+    onStartBrew: (doseGrams: Double, ratio: Double) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val viewModel: CalculatorViewModel = viewModel(
         factory = viewModelFactory { initializer { CalculatorViewModel(method = method) } },
     )
@@ -162,7 +165,10 @@ fun CalculatorScreen(method: BrewMethod, modifier: Modifier = Modifier) {
                 BrewMethod.COLD_BREW -> stringResource(R.string.calculator_start_cold_brew)
                 else -> stringResource(R.string.calculator_start_pour_over)
             }
-            Button(onClick = {}, enabled = false, modifier = Modifier.fillMaxWidth()) {
+            Button(
+                onClick = { onStartBrew(viewModel.effectiveDoseGrams, ratio) },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
                 Text(ctaLabel)
             }
         }

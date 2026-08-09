@@ -8,6 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.jrlabapps.coffeegrams.core.BrewMethod
 import com.jrlabapps.coffeegrams.ui.calculator.CalculatorScreen
+import com.jrlabapps.coffeegrams.ui.guidedbrew.BrewSessionScreen
 import com.jrlabapps.coffeegrams.ui.methodpicker.MethodPickerScreen
 import kotlinx.serialization.Serializable
 
@@ -23,6 +24,10 @@ object MethodPickerRoute
 @Serializable
 data class CalculatorRoute(val method: String)
 
+/** Routes to [BrewSessionScreen], which branches by method — mirrors iOS's `BrewSessionView`. */
+@Serializable
+data class BrewSessionRoute(val method: String, val doseGrams: Double, val ratio: Double)
+
 @Composable
 fun CoffeeGramsNavHost() {
     val navController = rememberNavController()
@@ -34,7 +39,21 @@ fun CoffeeGramsNavHost() {
         }
         composable<CalculatorRoute> { backStackEntry: NavBackStackEntry ->
             val route: CalculatorRoute = backStackEntry.toRoute()
-            CalculatorScreen(method = BrewMethod.fromRawValue(route.method))
+            val method = BrewMethod.fromRawValue(route.method)
+            CalculatorScreen(
+                method = method,
+                onStartBrew = { doseGrams, ratio ->
+                    navController.navigate(BrewSessionRoute(method.rawValue, doseGrams, ratio))
+                },
+            )
+        }
+        composable<BrewSessionRoute> { backStackEntry: NavBackStackEntry ->
+            val route: BrewSessionRoute = backStackEntry.toRoute()
+            BrewSessionScreen(
+                method = BrewMethod.fromRawValue(route.method),
+                doseGrams = route.doseGrams,
+                ratio = route.ratio,
+            )
         }
     }
 }
