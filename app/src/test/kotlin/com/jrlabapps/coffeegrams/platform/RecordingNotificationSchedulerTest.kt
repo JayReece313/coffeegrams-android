@@ -31,4 +31,12 @@ class RecordingNotificationSchedulerTest {
         assertTrue(RecordingNotificationScheduler(authorized = true).requestAuthorization())
         assertFalse(RecordingNotificationScheduler(authorized = false).requestAuthorization())
     }
+
+    @Test
+    fun `requestAuthorization counts each call`() {
+        val scheduler = RecordingNotificationScheduler()
+        scheduler.requestAuthorization()
+        scheduler.requestAuthorization()
+        assertEquals(2, scheduler.authRequestCount)
+    }
 }

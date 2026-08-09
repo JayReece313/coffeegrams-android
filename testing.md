@@ -77,9 +77,14 @@ their own file, mirroring the iOS suite layout.
 ./gradlew :app:testDebugUnitTest
 ```
 
-JVM tests for the five ViewModels (M6), using **Turbine** to assert on
-`StateFlow` emissions and the in-memory port doubles for storage, clock,
-haptics, and purchases.
+JVM tests for the five ViewModels (M6) and the platform adapters (M5),
+against the in-memory/recording/scripted port doubles for storage, clock,
+haptics, notifications, and purchases. **Turbine** is a test dependency for
+asserting `StateFlow`/`Flow` emission *sequences*; the M6 suite doesn't need
+it — every ported iOS test case asserts a single synchronous snapshot after
+an action, matching the iOS suite's own `#expect` pattern, so a plain
+`.value` read is the direct equivalent. Reach for Turbine when a future test
+actually needs to assert an emission sequence over time.
 
 **Persistence (M4), landed:** `BrewLogEntityMappingTest` (4 cases) proves the
 `BrewLogEntity` ↔ `BrewLogEntry` mapping round-trips and that an unrecognized
@@ -106,6 +111,26 @@ mirrors the iOS sibling's own precedent of never unit-testing
 `LiveNotificationService`/`LiveHaptics`/`SystemClock` directly. Actual
 notification *delivery* is verified manually on a device/emulator, the same
 way Play Billing and Doze are scoped below.
+
+**ViewModels (M6), landed:** 39 cases across 7 files, conformance-matched to
+the iOS sibling's ViewModel test suites (same inputs, same expected values).
+`CalculatorViewModelTest` (9) + `BrewPresetTest` (1) need no test double —
+pure value logic. `GuidedBrewViewModelTest` (14) and `EspressoShotViewModelTest`
+(4) drive `FakeAdvancingClock`/`RecordingHaptics` and call `tick()` directly,
+exactly like iOS calls `tickOnce()` — the real `viewModelScope`-owned ticker
+(started/stopped in lockstep with the timer's active state, not running
+unconditionally) never actually fires during a test because no test calls
+`advanceUntilIdle()`/`advanceTimeBy()`, so it stays parked at its `delay()`
+for the test's duration regardless of whether it's been started. Constructing
+either VM requires `Dispatchers.setMain(StandardTestDispatcher())` in
+`@BeforeTest`/`Dispatchers.resetMain()` in `@AfterTest`, since
+`viewModelScope.launch` resolves `Dispatchers.Main` immediately when first
+called. `ColdBrewViewModelTest` (3) reuses M5's
+`RecordingNotificationScheduler` (extended with an `authRequestCount`
+counter to match the iOS spy's `authRequests`). `BrewReminderTest` (2)
+covers the pure reminder-content builder. `PurchaseControllerTest` (6) uses
+a new `ScriptedPurchases` double against the `Purchases` port pulled forward
+from M8 (same early-port/late-adapter split as `MonotonicClock`).
 
 ### 3. Instrumented tests (`androidTest`)
 
