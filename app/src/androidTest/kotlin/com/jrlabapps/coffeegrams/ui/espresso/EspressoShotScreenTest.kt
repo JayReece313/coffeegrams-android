@@ -43,9 +43,12 @@ class EspressoShotScreenTest {
 
         composeTestRule.onNodeWithText("Start Shot").performClick()
         // hasStarted requires elapsedSeconds > 0 once stopped (matches iOS's
-        // identical definition) -- give the 100ms tick loop time to produce
-        // at least one whole second before stopping.
-        Thread.sleep(1100)
+        // identical definition) -- wait for the 100ms tick loop to actually
+        // produce a whole second rather than sleeping a fixed wall-clock
+        // duration, which can flake on a slow/loaded device.
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            composeTestRule.onAllNodesWithText("0s").fetchSemanticsNodes().isEmpty()
+        }
         composeTestRule.onNodeWithText("Stop").performClick()
 
         composeTestRule.onNodeWithText("Save to Log").assertIsDisplayed()
@@ -57,7 +60,9 @@ class EspressoShotScreenTest {
         composeTestRule.setContent { EspressoShotScreen(target = target()) }
 
         composeTestRule.onNodeWithText("Start Shot").performClick()
-        Thread.sleep(1100)
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            composeTestRule.onAllNodesWithText("0s").fetchSemanticsNodes().isEmpty()
+        }
         composeTestRule.onNodeWithText("Stop").performClick()
         composeTestRule.onNodeWithText("Save to Log").performClick()
         // add() is a real suspend Room write -- wait for it rather than

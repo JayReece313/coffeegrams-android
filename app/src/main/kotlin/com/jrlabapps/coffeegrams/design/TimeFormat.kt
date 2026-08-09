@@ -13,7 +13,9 @@ package com.jrlabapps.coffeegrams.design
 object TimeFormat {
     /** e.g. `134` -> "two minutes fourteen seconds"; `60` -> "one minute"; `0` -> "zero seconds". */
     fun spoken(totalSeconds: Int): String {
-        val clamped = totalSeconds.coerceAtLeast(0)
+        // words() only has tens-place vocabulary through "fifty" -- clamp to
+        // 59:59 rather than crash if a brew runs past the documented range.
+        val clamped = totalSeconds.coerceIn(0, 59 * 60 + 59)
         val minutes = clamped / 60
         val seconds = clamped % 60
 

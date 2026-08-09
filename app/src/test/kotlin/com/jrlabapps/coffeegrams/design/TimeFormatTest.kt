@@ -37,4 +37,10 @@ class TimeFormatTest {
     fun `negative input clamps to zero`() {
         assertEquals("zero seconds", TimeFormat.spoken(-5))
     }
+
+    @Test
+    fun `input at or beyond an hour clamps to fifty-nine fifty-nine instead of crashing`() {
+        assertEquals("fifty-nine minutes fifty-nine seconds", TimeFormat.spoken(3600))
+        assertEquals("fifty-nine minutes fifty-nine seconds", TimeFormat.spoken(3661))
+    }
 }

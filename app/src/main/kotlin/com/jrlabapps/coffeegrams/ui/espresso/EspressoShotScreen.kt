@@ -62,6 +62,10 @@ fun EspressoShotScreen(target: EspressoTarget, modifier: Modifier = Modifier) {
     val hasStarted = isRunning || elapsedSeconds > 0
 
     var savedToLog by remember { mutableStateOf(false) }
+    // isSaving flips synchronously on the first tap, before savedToLog has a
+    // chance to update -- guards against a rapid double-tap enqueuing two
+    // BrewLogEntry writes while the suspend Room write is in flight.
+    var isSaving by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val brewLogStore = application.brewLogStore
 
@@ -107,7 +111,9 @@ fun EspressoShotScreen(target: EspressoTarget, modifier: Modifier = Modifier) {
                         Text(stringResource(R.string.espresso_saved_to_log))
                     } else {
                         TextButton(
+                            enabled = !isSaving,
                             onClick = {
+                                isSaving = true
                                 scope.launch {
                                     brewLogStore.add(
                                         BrewLogEntry(
@@ -123,7 +129,7 @@ fun EspressoShotScreen(target: EspressoTarget, modifier: Modifier = Modifier) {
                             },
                         ) { Text(stringResource(R.string.espresso_save_to_log)) }
                     }
-                    TextButton(onClick = { viewModel.reset(); savedToLog = false }) {
+                    TextButton(onClick = { viewModel.reset(); savedToLog = false; isSaving = false }) {
                         Text(stringResource(R.string.espresso_reset))
                     }
                 }

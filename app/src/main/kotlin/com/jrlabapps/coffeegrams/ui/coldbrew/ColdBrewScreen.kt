@@ -62,7 +62,11 @@ fun ColdBrewScreen(doseGrams: Double, ratio: Double, modifier: Modifier = Modifi
 
     val steepHours by viewModel.steepHours.collectAsStateWithLifecycle()
     val reminderState by viewModel.reminderState.collectAsStateWithLifecycle()
-    val started = reminderState !is ColdBrewViewModel.ReminderState.Idle
+    // isStarting flips synchronously on the first tap, before reminderState
+    // has a chance to update -- guards the CTA against a rapid double-tap
+    // enqueuing two BrewLogEntry writes while the suspend work is in flight.
+    var isStarting by remember { mutableStateOf(false) }
+    val started = isStarting || reminderState !is ColdBrewViewModel.ReminderState.Idle
 
     val scope = rememberCoroutineScope()
     val brewLogStore = application.brewLogStore
@@ -80,7 +84,14 @@ fun ColdBrewScreen(doseGrams: Double, ratio: Double, modifier: Modifier = Modifi
     }
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
-    ) { granted -> scope.launch { onPermissionResolved(granted) } }
+    ) {
+        // Don't trust the raw grant result: POST_NOTIFICATIONS can already be
+        // granted while the user has notifications disabled for the app in
+        // Settings, in which case the launcher fires without a dialog and
+        // reports `true` even though nothing will actually be delivered.
+        // Re-check the effective, OS-reported capability instead.
+        scope.launch { onPermissionResolved(viewModel.canScheduleReminders()) }
+    }
 
     Scaffold(
         modifier = modifier,
@@ -128,6 +139,7 @@ fun ColdBrewScreen(doseGrams: Double, ratio: Double, modifier: Modifier = Modifi
             } else {
                 Button(
                     onClick = {
+                        isStarting = true
                         if (viewModel.canScheduleReminders()) {
                             scope.launch { onPermissionResolved(true) }
                         } else {

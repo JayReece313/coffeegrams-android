@@ -82,6 +82,10 @@ fun GuidedBrewScreen(timeline: BrewTimeline, doseGrams: Double, ratio: Double, m
     val totalElapsedSeconds by viewModel.totalElapsedSeconds.collectAsStateWithLifecycle()
 
     var savedToLog by remember { mutableStateOf(false) }
+    // isSaving flips synchronously on the first tap, before savedToLog has a
+    // chance to update -- guards against a rapid double-tap enqueuing two
+    // BrewLogEntry writes while the suspend Room write is in flight.
+    var isSaving by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val brewLogStore = application.brewLogStore
 
@@ -151,7 +155,9 @@ fun GuidedBrewScreen(timeline: BrewTimeline, doseGrams: Double, ratio: Double, m
                 viewModel = viewModel,
                 phase = phase,
                 savedToLog = savedToLog,
+                isSaving = isSaving,
                 onSave = {
+                    isSaving = true
                     scope.launch {
                         brewLogStore.add(
                             BrewLogEntry(
@@ -169,6 +175,7 @@ fun GuidedBrewScreen(timeline: BrewTimeline, doseGrams: Double, ratio: Double, m
                 onBrewAgain = {
                     viewModel.reset()
                     savedToLog = false
+                    isSaving = false
                 },
             )
         }
@@ -268,6 +275,7 @@ private fun Controls(
     viewModel: GuidedBrewViewModel,
     phase: BrewTimerPhase,
     savedToLog: Boolean,
+    isSaving: Boolean,
     onSave: () -> Unit,
     onBrewAgain: () -> Unit,
 ) {
@@ -280,7 +288,7 @@ private fun Controls(
                 if (savedToLog) {
                     Text(stringResource(R.string.guided_brew_saved_to_log))
                 } else {
-                    Button(onClick = onSave) { Text(stringResource(R.string.guided_brew_save_to_log)) }
+                    Button(onClick = onSave, enabled = !isSaving) { Text(stringResource(R.string.guided_brew_save_to_log)) }
                 }
                 OutlinedButton(onClick = onBrewAgain) { Text(stringResource(R.string.guided_brew_brew_again)) }
             }
