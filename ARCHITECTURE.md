@@ -4,7 +4,7 @@ Two layers: a **pure Kotlin logic module** under a **thin Compose app**. Every
 side effect crosses a port. This mirrors the iOS app deliberately — the shared
 shape is what makes the two codebases maintainable in parallel.
 
-> **Status (2026-08-09):** M2–M4 complete. `:core` is fully ported: all 12
+> **Status (2026-08-09):** M2–M5 complete. `:core` is fully ported: all 12
 > Models/Logic files and the `MonotonicClock` + `BrewLogStoring` ports, plus
 > all 49 conformance tests (`./gradlew :core:test`, headless, warnings-as-
 > errors). The Compose theme (`ui/theme/`) carries the real palette and type
@@ -12,9 +12,13 @@ shape is what makes the two codebases maintainable in parallel.
 > the adaptive icon + standalone logo mark are the real brand mark,
 > transliterated from the iOS repo's `render.swift`. Persistence (`data/`) is
 > a Room-backed `BrewLogStoring` adapter mirroring `BrewLogRecord`'s 11
-> columns exactly, with an in-memory test double. The boxes marked
-> *(M5)*…*(M9)* below are still the intended structure, not yet written. This
-> document is updated as each milestone lands.
+> columns exactly, with an in-memory test double. Platform adapters
+> (`platform/`) add `MonotonicClock`, `Haptics`, and `Notifications` — the
+> last backed by a notification channel plus `WorkManager` scheduling and a
+> `ReminderWorker` that delivers the reminder. Nothing calls any of the three
+> yet (no ViewModel exists until M6). The boxes marked *(M6)*…*(M9)* below are
+> still the intended structure, not yet written. This document is updated as
+> each milestone lands.
 
 ---
 
@@ -31,7 +35,7 @@ graph TD
     subgraph core[":core — pure Kotlin, no Android"]
         M["Models — done<br/>BrewMethod · BrewType · BrewMethodProfile · BrewStep<br/>EspressoTarget · ColdBrew · BrewLogEntry"]
         L["Logic — done<br/>BrewCalculator · BrewTimeline · BrewTimelineBuilder<br/>BrewTimerEngine"]
-        P["Ports (interfaces)<br/>MonotonicClock · BrewLogStoring — done<br/>Haptics · Notifications · Purchases — M5/M8"]
+        P["Ports (interfaces)<br/>MonotonicClock · BrewLogStoring · Haptics · Notifications — done<br/>Purchases — M8"]
     end
 
     UI --> VM
@@ -62,10 +66,10 @@ emulator, and what made the iOS→Android port cheap in the first place.
 
 | Port *(in `:core`)* | Live adapter *(in `:app`)* | Test double | Milestone |
 |---|---|---|---|
-| `MonotonicClock` — **ported (M2)** | `SystemClock.elapsedRealtime()` | Fake advancing clock | M5 |
+| `MonotonicClock` — **ported (M2)**, adapter **built (M5)** | `LiveMonotonicClock` (`SystemClock.elapsedRealtime()`) | `FakeAdvancingClock` | M5 |
 | `BrewLogStoring` — **ported (M4)** | `RoomBrewLogStore` (`BrewLogDao`) | `InMemoryBrewLogStore` | M4 |
-| `Haptics` | `VibratorManager` / `HapticFeedbackConstants` | Recording spy | M5 |
-| `Notifications` | Channel + WorkManager | Recording spy | M5 |
+| `Haptics` — **built (M5)** | `LiveHaptics` (`Vibrator`/`VibratorManager`) | `RecordingHaptics` | M5 |
+| `Notifications` — **built (M5)** | `LiveNotificationScheduler` (channel + `WorkManager`) | `RecordingNotificationScheduler` | M5 |
 | `Purchases` | Play `BillingClient` | Scripted entitlement stub | M8 |
 
 `DiagnosticsService` from iOS is **deliberately dropped** — it only wrote to
@@ -152,7 +156,8 @@ See [`testing.md`](testing.md) for how to run each suite.
 | `app/src/test/kotlin/.../data/` | `InMemoryBrewLogStore` test double + its own contract test, entity↔entry mapping test |
 | `app/src/androidTest/kotlin/.../data/` | `RoomBrewLogStoreTest` — the same contract, against real Room (needs a device/emulator) |
 | `app/schemas/` | Room's exported schema JSON (`exportSchema = true`) — the v1 baseline future migrations diff against |
-| `app/src/main/kotlin/.../platform/` | Clock, haptics, notification adapters *(M5)* |
+| `app/src/main/kotlin/.../platform/` | `LiveMonotonicClock`, `LiveHaptics`, `LiveNotificationScheduler`, `ReminderWorker` |
+| `app/src/test/kotlin/.../platform/` | `FakeAdvancingClock`, `RecordingHaptics`, `RecordingNotificationScheduler` test doubles + their tests, plus JVM tests for `LiveNotificationScheduler.buildWorkRequest` and `ReminderWorker.contentFrom` |
 | `app/src/main/kotlin/.../billing/` | `BillingClient` adapter, `PurchaseController` *(M8)* |
 | `gradle/libs.versions.toml` | Every dependency version, in one place |
 

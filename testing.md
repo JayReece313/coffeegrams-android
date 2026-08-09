@@ -90,6 +90,23 @@ delete, setRating/setNotes, and no-op-on-missing-id — against the in-memory
 double. `RoomBrewLogStoreTest` (`androidTest`, below) asserts the identical
 8 cases against real Room.
 
+**Platform adapters (M5), landed:** the three test doubles
+(`FakeAdvancingClock`, `RecordingHaptics`, `RecordingNotificationScheduler`)
+each have their own unit test, mirroring `InMemoryBrewLogStore`'s precedent
+of testing the double itself. Two pure functions extracted from the
+framework-touching live code are also unit-tested on the plain JVM:
+`LiveNotificationScheduler.buildWorkRequest` (reminder → `OneTimeWorkRequest`
+mapping, delay clamping, tagging) and `ReminderWorker.contentFrom` (input
+`Data` → notification content, including the `String` id → `Int` notification
+id derivation). What stays unautomated: the live adapters' actual framework
+calls (`LiveMonotonicClock`, `LiveHaptics`, the channel/`WorkManager` side of
+`LiveNotificationScheduler`, `ReminderWorker.doWork`'s `notify()` call) — no
+`work-testing` or Robolectric dependency exists in the catalog, and this
+mirrors the iOS sibling's own precedent of never unit-testing
+`LiveNotificationService`/`LiveHaptics`/`SystemClock` directly. Actual
+notification *delivery* is verified manually on a device/emulator, the same
+way Play Billing and Doze are scoped below.
+
 ### 3. Instrumented tests (`androidTest`)
 
 ```bash
