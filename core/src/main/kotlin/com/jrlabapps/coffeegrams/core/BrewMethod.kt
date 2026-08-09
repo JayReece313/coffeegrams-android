@@ -38,4 +38,14 @@ enum class BrewMethod(val rawValue: String) {
      */
     val isFreeTier: Boolean
         get() = this == FRENCH_PRESS
+
+    companion object {
+        /**
+         * Decode from a persisted raw value, matching the iOS app's
+         * `BrewMethod(rawValue:) ?? .v60` fallback in `BrewLogRecord.method`
+         * exactly — an unrecognized string (e.g. a future or removed
+         * method) falls back to V60 rather than throwing.
+         */
+        fun fromRawValue(value: String): BrewMethod = entries.firstOrNull { it.rawValue == value } ?: V60
+    }
 }

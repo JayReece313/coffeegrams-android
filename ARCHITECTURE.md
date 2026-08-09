@@ -4,15 +4,17 @@ Two layers: a **pure Kotlin logic module** under a **thin Compose app**. Every
 side effect crosses a port. This mirrors the iOS app deliberately — the shared
 shape is what makes the two codebases maintainable in parallel.
 
-> **Status (2026-08-07):** M2 and M3 complete. `:core` is fully ported: all 12
-> Models/Logic files and the `MonotonicClock` port, plus all 49 conformance
-> tests (`./gradlew :core:test`, headless, warnings-as-errors). The Compose
-> theme (`ui/theme/`) carries the real palette and type scale, `BrewMethod`'s
-> placeholder icon mapping is ported (`design/`), and the adaptive icon +
-> standalone logo mark are the real brand mark, transliterated from the iOS
-> repo's `render.swift`. The boxes marked *(M4)*…*(M9)* below are still the
-> intended structure, not yet written. This document is updated as each
-> milestone lands.
+> **Status (2026-08-09):** M2–M4 complete. `:core` is fully ported: all 12
+> Models/Logic files and the `MonotonicClock` + `BrewLogStoring` ports, plus
+> all 49 conformance tests (`./gradlew :core:test`, headless, warnings-as-
+> errors). The Compose theme (`ui/theme/`) carries the real palette and type
+> scale, `BrewMethod`'s placeholder icon mapping is ported (`design/`), and
+> the adaptive icon + standalone logo mark are the real brand mark,
+> transliterated from the iOS repo's `render.swift`. Persistence (`data/`) is
+> a Room-backed `BrewLogStoring` adapter mirroring `BrewLogRecord`'s 11
+> columns exactly, with an in-memory test double. The boxes marked
+> *(M5)*…*(M9)* below are still the intended structure, not yet written. This
+> document is updated as each milestone lands.
 
 ---
 
@@ -29,7 +31,7 @@ graph TD
     subgraph core[":core — pure Kotlin, no Android"]
         M["Models — done<br/>BrewMethod · BrewType · BrewMethodProfile · BrewStep<br/>EspressoTarget · ColdBrew · BrewLogEntry"]
         L["Logic — done<br/>BrewCalculator · BrewTimeline · BrewTimelineBuilder<br/>BrewTimerEngine"]
-        P["Ports (interfaces)<br/>MonotonicClock — done<br/>BrewLogStoring · Haptics · Notifications · Purchases — M4/M5/M8"]
+        P["Ports (interfaces)<br/>MonotonicClock · BrewLogStoring — done<br/>Haptics · Notifications · Purchases — M5/M8"]
     end
 
     UI --> VM
@@ -61,7 +63,7 @@ emulator, and what made the iOS→Android port cheap in the first place.
 | Port *(in `:core`)* | Live adapter *(in `:app`)* | Test double | Milestone |
 |---|---|---|---|
 | `MonotonicClock` — **ported (M2)** | `SystemClock.elapsedRealtime()` | Fake advancing clock | M5 |
-| `BrewLogStoring` | Room DAO | In-memory list | M4 |
+| `BrewLogStoring` — **ported (M4)** | `RoomBrewLogStore` (`BrewLogDao`) | `InMemoryBrewLogStore` | M4 |
 | `Haptics` | `VibratorManager` / `HapticFeedbackConstants` | Recording spy | M5 |
 | `Notifications` | Channel + WorkManager | Recording spy | M5 |
 | `Purchases` | Play `BillingClient` | Scripted entitlement stub | M8 |
@@ -146,7 +148,10 @@ See [`testing.md`](testing.md) for how to run each suite.
 | `app/src/main/kotlin/.../design/` | App-layer presentation mappings (`BrewMethod`'s placeholder icon), mirrors iOS's `Design/` folder |
 | `app/src/main/res/drawable/ic_launcher_foreground.xml`, `logo_mark.xml` | The real brand mark (adaptive icon + standalone), transliterated from `coffeegrams_logo/render.swift` |
 | `app/src/main/kotlin/.../ui/` | Screens and composables *(M7)* |
-| `app/src/main/kotlin/.../data/` | Room entity, DAO, `BrewLogStoring` adapter *(M4)* |
+| `app/src/main/kotlin/.../data/` | `BrewLogEntity`, `BrewLogDao`, `BrewLogDatabase`, `RoomBrewLogStore` — the `BrewLogStoring` adapter |
+| `app/src/test/kotlin/.../data/` | `InMemoryBrewLogStore` test double + its own contract test, entity↔entry mapping test |
+| `app/src/androidTest/kotlin/.../data/` | `RoomBrewLogStoreTest` — the same contract, against real Room (needs a device/emulator) |
+| `app/schemas/` | Room's exported schema JSON (`exportSchema = true`) — the v1 baseline future migrations diff against |
 | `app/src/main/kotlin/.../platform/` | Clock, haptics, notification adapters *(M5)* |
 | `app/src/main/kotlin/.../billing/` | `BillingClient` adapter, `PurchaseController` *(M8)* |
 | `gradle/libs.versions.toml` | Every dependency version, in one place |
