@@ -113,7 +113,10 @@ fun CalculatorScreen(method: BrewMethod, modifier: Modifier = Modifier) {
                 value = inputText,
                 onValueChange = { text ->
                     inputText = text
-                    text.toDoubleOrNull()?.let { value ->
+                    // The decimal keyboard shows the device locale's own separator
+                    // (e.g. ',' on many non-English locales); normalize before
+                    // parsing so typing it doesn't silently fail to update state.
+                    text.replace(',', '.').toDoubleOrNull()?.let { value ->
                         if (mode == CalculatorViewModel.Mode.DOSE_FIRST) {
                             viewModel.setDoseGrams(value)
                         } else {

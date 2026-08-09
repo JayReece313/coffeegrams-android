@@ -5,6 +5,7 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextReplacement
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.jrlabapps.coffeegrams.core.BrewMethod
 import org.junit.Rule
@@ -53,5 +54,16 @@ class CalculatorScreenTest {
         composeTestRule.setContent { CalculatorScreen(method = BrewMethod.AEROPRESS) }
 
         composeTestRule.onNodeWithText("Hoffmann").assertExists()
+    }
+
+    @Test
+    fun commaDecimalInputIsParsed() {
+        // The decimal keyboard shows the device locale's own separator; a
+        // comma must update state exactly like a period does.
+        composeTestRule.setContent { CalculatorScreen(method = BrewMethod.V60) }
+
+        composeTestRule.onNodeWithText("18").performTextReplacement("18,5")
+
+        composeTestRule.onNodeWithText("296 g").assertExists() // 18.5 x 16
     }
 }

@@ -8,6 +8,10 @@ import com.jrlabapps.coffeegrams.platform.LiveMonotonicClock
 import com.jrlabapps.coffeegrams.platform.LiveNotificationScheduler
 import com.jrlabapps.coffeegrams.platform.UnavailablePurchases
 import com.jrlabapps.coffeegrams.viewmodel.PurchaseController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 /**
  * Application entry point.
@@ -18,6 +22,9 @@ import com.jrlabapps.coffeegrams.viewmodel.PurchaseController
  * iOS app and keeps the dependency list at zero third-party SDKs.
  */
 class CoffeeGramsApplication : Application() {
+    /** Lives for the whole process — [PurchaseController.start] suspends forever, matching its lifetime. */
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
     private val database by lazy { BrewLogDatabase.build(this) }
 
     val brewLogStore by lazy { RoomBrewLogStore(database.brewLogDao()) }
@@ -34,4 +41,12 @@ class CoffeeGramsApplication : Application() {
      * environment-injected instance.
      */
     val purchaseController by lazy { PurchaseController(UnavailablePurchases()) }
+
+    override fun onCreate() {
+        super.onCreate()
+        // Loads the initial entitlement/price, then keeps collecting
+        // entitlementUpdates() for as long as the app runs — matches iOS's
+        // single `.task { await purchases.start() }` call at the app root.
+        applicationScope.launch { purchaseController.start() }
+    }
 }
