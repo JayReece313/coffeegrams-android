@@ -38,6 +38,14 @@ class LiveNotificationSchedulerTest {
     }
 
     @Test
+    fun `buildWorkRequest preserves fractional-second precision, rounded up`() {
+        val reminder = ScheduledReminder(id = "x", title = "t", body = "b", delaySeconds = 1.5)
+        val request = LiveNotificationScheduler.buildWorkRequest(reminder)
+        // Rounds up (not truncates) so the reminder never fires earlier than requested.
+        assertEquals(1500L, request.workSpec.initialDelay)
+    }
+
+    @Test
     fun `buildWorkRequest tags the request with the reminder id`() {
         val reminder = ScheduledReminder(id = "french_press_plunge", title = "t", body = "b", delaySeconds = 90.0)
         val request = LiveNotificationScheduler.buildWorkRequest(reminder)

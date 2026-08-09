@@ -20,6 +20,9 @@
     -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- Normal (not runtime) permission — required for LiveHaptics's Vibrator calls. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
     <application
         android:name=".CoffeeGramsApplication"
         android:allowBackup="true"

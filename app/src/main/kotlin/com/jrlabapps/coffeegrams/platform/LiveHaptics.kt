@@ -14,27 +14,36 @@ import com.jrlabapps.coffeegrams.core.Haptics
  * many devices report no amplitude control and silently fall back to a
  * default strength, which would make [targetReached] and [finished]
  * indistinguishable on that hardware.
+ *
+ * [vibrator] is nullable and every call is guarded by [Vibrator.hasVibrator]:
+ * some devices/emulators have no vibration hardware or expose no vibrator
+ * service at all, and a haptic cue failing to fire should never crash the
+ * brew it's attached to.
  */
 class LiveHaptics(context: Context) : Haptics {
-    private val vibrator: Vibrator by lazy {
+    private val vibrator: Vibrator? by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val manager = context.getSystemService(VibratorManager::class.java)
-            manager.defaultVibrator
+            context.getSystemService(VibratorManager::class.java)?.defaultVibrator
         } else {
             @Suppress("DEPRECATION")
-            context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+            context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
         }
     }
 
     override fun stepChange() {
-        vibrator.vibrate(VibrationEffect.createOneShot(20, VibrationEffect.DEFAULT_AMPLITUDE))
+        vibrate(VibrationEffect.createOneShot(20, VibrationEffect.DEFAULT_AMPLITUDE))
     }
 
     override fun targetReached() {
-        vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
+        vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
     }
 
     override fun finished() {
-        vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 40, 60, 40), -1))
+        vibrate(VibrationEffect.createWaveform(longArrayOf(0, 40, 60, 40), -1))
+    }
+
+    private fun vibrate(effect: VibrationEffect) {
+        val vibrator = vibrator ?: return
+        if (vibrator.hasVibrator()) vibrator.vibrate(effect)
     }
 }

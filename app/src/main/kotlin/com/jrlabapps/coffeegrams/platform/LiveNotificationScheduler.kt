@@ -12,6 +12,7 @@ import androidx.work.WorkManager
 import com.jrlabapps.coffeegrams.core.NotificationScheduling
 import com.jrlabapps.coffeegrams.core.ScheduledReminder
 import java.util.concurrent.TimeUnit
+import kotlin.math.ceil
 import kotlin.math.max
 
 /**
@@ -53,6 +54,10 @@ class LiveNotificationScheduler(private val context: Context) : NotificationSche
          * the plain JVM. [ExistingWorkPolicy.REPLACE] (used by [schedule])
          * also cancels already-*running* work, not just pending work, which
          * is fine here since [ReminderWorker] runs near-instantly.
+         *
+         * The clamped delay is rounded *up* to whole milliseconds ([ceil],
+         * not truncation) so a fractional-second delay never fires earlier
+         * than requested.
          */
         fun buildWorkRequest(reminder: ScheduledReminder): OneTimeWorkRequest {
             val data = Data.Builder()
@@ -60,9 +65,9 @@ class LiveNotificationScheduler(private val context: Context) : NotificationSche
                 .putString(ReminderWorker.KEY_TITLE, reminder.title)
                 .putString(ReminderWorker.KEY_BODY, reminder.body)
                 .build()
-            val delaySeconds = max(1.0, reminder.delaySeconds).toLong()
+            val delayMillis = ceil(max(1.0, reminder.delaySeconds) * 1000.0).toLong()
             return OneTimeWorkRequestBuilder<ReminderWorker>()
-                .setInitialDelay(delaySeconds, TimeUnit.SECONDS)
+                .setInitialDelay(delayMillis, TimeUnit.MILLISECONDS)
                 .setInputData(data)
                 .addTag(reminder.id)
                 .build()
