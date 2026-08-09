@@ -1,9 +1,9 @@
 package com.jrlabapps.coffeegrams.viewmodel
 
-import android.util.Log
 import com.jrlabapps.coffeegrams.core.BrewMethod
 import com.jrlabapps.coffeegrams.core.PurchaseOutcome
 import com.jrlabapps.coffeegrams.core.Purchases
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -47,18 +47,23 @@ class PurchaseController(private val provider: Purchases) {
         provider.entitlementUpdates().collect { unlocked -> _isPremiumUnlocked.value = unlocked }
     }
 
-    /** Returns true if the purchase completed. */
+    /**
+     * Returns true if the purchase completed. iOS models user-cancellation
+     * as a *returned* outcome, not a thrown error, so anything the `catch`
+     * sees here is a genuine provider failure — the `catch (Exception)`,
+     * not `catch (Throwable)`, is deliberate too: cancellation is delivered
+     * as an `Exception` subtype and must keep propagating, not be
+     * swallowed into a normal `false` return.
+     */
     suspend fun purchase(): Boolean {
         _isWorking.value = true
         try {
             val outcome = provider.purchase()
             if (outcome == PurchaseOutcome.PURCHASED) _isPremiumUnlocked.value = true
             return outcome == PurchaseOutcome.PURCHASED
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            // iOS models user-cancellation as a *returned* outcome, not a thrown
-            // error, so anything reaching here is a genuine failure. With no
-            // DiagnosticsService on Android, this is the only place it surfaces.
-            Log.w(TAG, "Purchase failed", e)
             return false
         } finally {
             _isWorking.value = false
@@ -72,9 +77,5 @@ class PurchaseController(private val provider: Purchases) {
         } finally {
             _isWorking.value = false
         }
-    }
-
-    private companion object {
-        const val TAG = "PurchaseController"
     }
 }

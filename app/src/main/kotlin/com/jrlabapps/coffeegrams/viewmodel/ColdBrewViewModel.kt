@@ -37,9 +37,17 @@ class ColdBrewViewModel(
     val waterGrams: Double get() = BrewCalculator.waterGrams(doseGrams, ratio)
 
     /**
-     * Ask permission and schedule the "steep done" reminder. If permission
-     * is denied we degrade gracefully — the user can still brew, just
-     * without the reminder.
+     * Check permission and schedule the "steep done" reminder. If
+     * permission is denied we degrade gracefully — the user can still
+     * brew, just without the reminder.
+     *
+     * On Android, [NotificationScheduling.requestAuthorization] only
+     * *checks* current permission state — it cannot show the system
+     * prompt (that requires an Activity/Compose composition). The caller
+     * (the cold-brew screen, M7) is responsible for requesting the real
+     * `POST_NOTIFICATIONS` permission — e.g. on first use of this screen —
+     * *before* calling [startSteep], or this will read as denied on a
+     * fresh install even for a user who would have said yes.
      */
     suspend fun startSteep() {
         val granted = notifications.requestAuthorization()

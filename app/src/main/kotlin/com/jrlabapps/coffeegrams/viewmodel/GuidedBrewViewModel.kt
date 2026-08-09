@@ -9,6 +9,7 @@ import com.jrlabapps.coffeegrams.core.BrewTimerEvent
 import com.jrlabapps.coffeegrams.core.BrewTimerPhase
 import com.jrlabapps.coffeegrams.core.Haptics
 import com.jrlabapps.coffeegrams.core.MonotonicClock
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,12 +24,15 @@ import kotlin.math.floor
  *
  * Unlike the iOS sibling — where the *View* drives a 0.1s `Timer.publish`
  * and calls a passive `tickOnce()` — this VM owns its own tick loop
- * ([TICK_INTERVAL_MS], cancelled automatically via `viewModelScope` on
- * `onCleared()`). That's a deliberate divergence, not drift: on Android the
- * View is exactly what gets destroyed on device rotation, so it can't be
- * the cadence owner if the brew is meant to survive a configuration change.
- * [tick] itself stays exactly as passive and pure as iOS's `tickOnce()` —
- * only *who calls it* moved.
+ * ([TICK_INTERVAL_MS]), started and stopped in lockstep with
+ * [BrewTimerEngine.isActive] (see [updateTicker]) rather than running
+ * unconditionally for the VM's whole lifetime, so it isn't waking up 10
+ * times a second while idle, paused, or finished. That's a deliberate
+ * divergence, not drift: on Android the View is exactly what gets
+ * destroyed on device rotation, so it can't be the cadence owner if the
+ * brew is meant to survive a configuration change. [tick] itself stays
+ * exactly as passive and pure as iOS's `tickOnce()` — only *who calls it*
+ * moved.
  */
 class GuidedBrewViewModel(
     val timeline: BrewTimeline,
@@ -64,15 +68,11 @@ class GuidedBrewViewModel(
     /** The clock reading at the last tick, used to compute the delta to advance. */
     private var lastTickTime: Double = 0.0
 
+    private var tickerJob: Job? = null
+
     init {
         engine.onEvent = { event -> handle(event) }
         syncFromEngine()
-        viewModelScope.launch {
-            while (true) {
-                delay(TICK_INTERVAL_MS)
-                tick()
-            }
-        }
     }
 
     // MARK: Derived view state
@@ -204,6 +204,30 @@ class GuidedBrewViewModel(
         _overrunSeconds.value = engine.overrunInStep?.let { floor(it).toInt() }
         _totalElapsedSeconds.value = floor(engine.totalWallElapsed).toInt()
         _isOnFinalStep.value = engine.isOnFinalStep
+        updateTicker()
+    }
+
+    /**
+     * Starts the tick loop when the engine becomes active, stops it
+     * otherwise — called after every state change so the ticker always
+     * matches [BrewTimerEngine.isActive] regardless of which method
+     * caused the transition (a direct [advanceStep] on the final step can
+     * complete the brew, not just [finish]).
+     */
+    private fun updateTicker() {
+        if (engine.isActive) {
+            if (tickerJob == null) {
+                tickerJob = viewModelScope.launch {
+                    while (true) {
+                        delay(TICK_INTERVAL_MS)
+                        tick()
+                    }
+                }
+            }
+        } else {
+            tickerJob?.cancel()
+            tickerJob = null
+        }
     }
 
     private companion object {

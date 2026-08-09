@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.jrlabapps.coffeegrams.core.EspressoTarget
 import com.jrlabapps.coffeegrams.core.MonotonicClock
 import com.jrlabapps.coffeegrams.core.ShotTimingState
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +17,10 @@ import kotlinx.coroutines.launch
  * reads green inside the target window, amber before, red after.
  *
  * Same VM-owned tick loop as [GuidedBrewViewModel], for the same
- * rotation-survival reason — see that class's doc comment.
+ * rotation-survival reason — see that class's doc comment. Started in
+ * [start], stopped in [stop], rather than running unconditionally for the
+ * VM's whole lifetime, so it isn't waking up 10 times a second before the
+ * shot begins or after it ends.
  */
 class EspressoShotViewModel(
     val target: EspressoTarget,
@@ -30,15 +34,7 @@ class EspressoShotViewModel(
     val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()
 
     private var startTime: Double = 0.0
-
-    init {
-        viewModelScope.launch {
-            while (true) {
-                delay(TICK_INTERVAL_MS)
-                tick()
-            }
-        }
-    }
+    private var tickerJob: Job? = null
 
     /** Green / amber / red classification of the current elapsed time against the target window. */
     val timingState: ShotTimingState
@@ -54,10 +50,19 @@ class EspressoShotViewModel(
         _isRunning.value = true
         _elapsedSeconds.value = 0
         startTime = clock.now
+        tickerJob?.cancel()
+        tickerJob = viewModelScope.launch {
+            while (true) {
+                delay(TICK_INTERVAL_MS)
+                tick()
+            }
+        }
     }
 
     fun stop() {
         _isRunning.value = false
+        tickerJob?.cancel()
+        tickerJob = null
     }
 
     fun reset() {
