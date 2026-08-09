@@ -108,6 +108,6 @@ As of **2026-08-08**:
 - ⬜ **Next: M4** — persistence: Room entity mirroring `BrewLogRecord`'s 11 columns, DAO, and the `BrewLogStoring` port + in-memory test double.
 - ⬜ **Still to confirm in Play Console:** organization verification has cleared (the Small Business Program opt-in succeeding is a good sign, but this wasn't separately reconfirmed).
 
-**Local emulator note:** `android-37.0` system images crash on boot on the primary dev Mac (M4 Max, macOS 26.3.1) — a genuine QEMU bug in the graphics-passthrough channel, unrelated to GPU backend flags. `system-images;android-34;google_apis;arm64-v8a` boots clean. Default to API 34 for local AVDs on this machine until this is confirmed fixed upstream.
+**Local emulator note:** a known AVD system-image crash and workaround for the primary dev Mac is documented in [`testing.md`](testing.md#prerequisites) — check there before creating a new AVD.
 
 **Boards:** [GitHub project](https://github.com/users/JayReece313/projects/3) · local board `coffeegrams-android` in `~/Documents/claude_code/kanban_board` (`npm start`, then open `http://localhost:4317`).
