@@ -11,7 +11,13 @@ class RecordingNotificationScheduler(private var authorized: Boolean = true) : N
     private val _cancelled = mutableListOf<String>()
     val cancelled: List<String> get() = _cancelled
 
-    override fun requestAuthorization(): Boolean = authorized
+    var authRequestCount: Int = 0
+        private set
+
+    override fun requestAuthorization(): Boolean {
+        authRequestCount++
+        return authorized
+    }
 
     override suspend fun schedule(reminder: ScheduledReminder) {
         _scheduled += reminder

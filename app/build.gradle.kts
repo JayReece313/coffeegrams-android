@@ -42,6 +42,14 @@ android {
         compose = true
     }
 
+    testOptions {
+        // PurchaseController logs via android.util.Log, which the Android
+        // stub jar throws on by default under a plain JVM unit test. This
+        // makes framework stubs return defaults (no-op) instead, matching
+        // how a real device behaves for a call whose result isn't checked.
+        unitTests.isReturnDefaultValues = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
