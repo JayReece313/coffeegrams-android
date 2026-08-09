@@ -6,7 +6,7 @@ The iOS original is live on the App Store and lives in a separate repo ([`JayRee
 
 | | |
 |---|---|
-| **Status** | M3 complete — design system (palette, type, real brand mark) landed; persistence (M4) is next |
+| **Status** | M4 complete — Room-backed persistence landed; platform adapters (M5) is next |
 | **Target** | Google Play, v1.0, feature parity with iOS 1.1 |
 | **Package** | `com.jrlabapps.coffeegrams` |
 | **Min / Target / Compile SDK** | 26 (Android 8.0) / 36 (Android 16) / 37.1 |

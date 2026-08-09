@@ -77,21 +77,38 @@ their own file, mirroring the iOS suite layout.
 ./gradlew :app:testDebugUnitTest
 ```
 
-JVM tests for the five ViewModels, using **Turbine** to assert on `StateFlow`
-emissions and the in-memory port doubles for storage, clock, haptics, and
-purchases. Land in M6.
+JVM tests for the five ViewModels (M6), using **Turbine** to assert on
+`StateFlow` emissions and the in-memory port doubles for storage, clock,
+haptics, and purchases.
 
-### 3. Compose UI tests
+**Persistence (M4), landed:** `BrewLogEntityMappingTest` (4 cases) proves the
+`BrewLogEntity` ↔ `BrewLogEntry` mapping round-trips and that an unrecognized
+`methodRawValue` falls back to V60, matching iOS's `BrewLogRecord.method`
+exactly. `InMemoryBrewLogStoreTest` (8 cases) exercises the full
+`BrewLogStoring` contract — add/entries round-trip, newest-first ordering,
+delete, setRating/setNotes, and no-op-on-missing-id — against the in-memory
+double. `RoomBrewLogStoreTest` (`androidTest`, below) asserts the identical
+8 cases against real Room.
+
+### 3. Instrumented tests (`androidTest`)
 
 ```bash
 ./gradlew :app:connectedAndroidTest
 ```
 
-Needs a running emulator or a connected device. Covers the five screens: the Pro
-gate on the method picker, calculator input and output, guided-brew step
-rendering, the brew log and its star rating. Also asserts TalkBack content
-descriptions — a numeric readout with no label is a defect, not a nice-to-have.
-Land in M7.
+Needs a running emulator or a connected device — see the emulator note above
+if setting one up locally.
+
+**Persistence (M4), landed:** `RoomBrewLogStoreTest` (8 cases) — the exact
+same `BrewLogStoring` contract as `InMemoryBrewLogStoreTest`, run against a
+real (in-memory-mode) Room database, proving the actual SQL, `TypeConverters`
+(`UUID`↔`TEXT`, `Instant`↔epoch-millis `INTEGER`), and DAO wiring are correct,
+not just the interface contract in isolation.
+
+**Compose UI tests (M7):** the five screens — the Pro gate on the method
+picker, calculator input and output, guided-brew step rendering, the brew log
+and its star rating. Also asserts TalkBack content descriptions — a numeric
+readout with no label is a defect, not a nice-to-have.
 
 ### 4. Build gates
 

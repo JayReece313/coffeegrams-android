@@ -3,11 +3,13 @@
 agp = "9.3.1"
 kotlin = "2.4.10"
 jvmTarget = "17"
-# No KSP entry. Nothing applies it until M4 brings in Room, and KSP's versioning
-# changed schemes mid-flight — releases up to 2.2.21-2.0.5 pinned a Kotlin
-# version in the coordinate, while 2.3.x onward decoupled. That leaves no release
-# that names Kotlin 2.4.10, so any version pinned today is an unverifiable guess.
-# M4 picks one and validates it against the Kotlin in use then.
+# KSP 2.3.11 — verified against Kotlin 2.4.10 (M4), not guessed. KSP 2.3.10's
+# changelog ("Sanitize ':' in internal-name module suffix so KSP works with
+# Kotlin 2.4.0 default module names", google/ksp#2964) confirms 2.4.x
+# compatibility landed there; 2.3.11 is the next release after it. Kotlin
+# patch releases within a minor line (2.4.0 -> 2.4.10) preserve compiler-
+# plugin ABI compatibility, so this holds for 2.4.10 too.
+ksp = "2.3.11"
 
 # Android SDK levels.
 #
@@ -99,3 +101,4 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 # rejects the standalone plugin. https://kotl.in/gradle/agp-built-in-kotlin
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
