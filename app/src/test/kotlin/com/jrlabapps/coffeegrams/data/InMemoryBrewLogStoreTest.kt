@@ -44,6 +44,16 @@ class InMemoryBrewLogStoreTest {
     }
 
     @Test
+    fun `add with a reused id upserts rather than duplicating`() = runTest {
+        val store = InMemoryBrewLogStore()
+        val id = UUID.randomUUID()
+        store.add(entry(id = id, rating = null))
+        val updated = entry(id = id, rating = 4)
+        store.add(updated)
+        assertEquals(listOf(updated), store.entries())
+    }
+
+    @Test
     fun `entries returns newest first`() = runTest {
         val store = InMemoryBrewLogStore()
         val older = entry(date = Instant.ofEpochSecond(1_000))

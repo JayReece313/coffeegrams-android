@@ -66,6 +66,26 @@ class RoomBrewLogStoreTest {
     }
 
     @Test
+    fun addWithAReusedIdUpsertsRatherThanCrashingOnThePrimaryKey() = runTest {
+        val id = UUID.randomUUID()
+        store.add(entry(id = id, rating = null))
+        val updated = entry(id = id, rating = 4)
+        store.add(updated)
+        assertEquals(listOf(updated), store.entries())
+    }
+
+    @Test
+    fun instantNanosecondPrecisionRoundTripsExactly() = runTest {
+        // Instant.now() on the JVM can carry sub-millisecond resolution;
+        // the epoch-millis converter this replaced would have truncated
+        // 123_456_789 nanos down to 123ms and lost it on read-back.
+        val precise = Instant.ofEpochSecond(1_700_000_000L, 123_456_789L)
+        val saved = entry(date = precise)
+        store.add(saved)
+        assertEquals(precise, store.entries().single().date)
+    }
+
+    @Test
     fun entriesReturnsNewestFirst() = runTest {
         val older = entry(date = Instant.ofEpochSecond(1_000))
         val newer = entry(date = Instant.ofEpochSecond(2_000))

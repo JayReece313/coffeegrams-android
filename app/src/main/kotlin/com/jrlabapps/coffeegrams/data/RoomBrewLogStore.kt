@@ -7,7 +7,7 @@ import java.util.UUID
 /** The live [BrewLogStoring] adapter, backed by Room. */
 class RoomBrewLogStore(private val dao: BrewLogDao) : BrewLogStoring {
     override suspend fun add(entry: BrewLogEntry) {
-        dao.insert(entry.toEntity())
+        dao.upsert(entry.toEntity())
     }
 
     override suspend fun entries(): List<BrewLogEntry> = dao.getAll().map { it.toEntry() }

@@ -70,4 +70,18 @@ class BrewLogEntityMappingTest {
         assertEquals(36.0, entity.waterGrams)
         assertEquals(27, entity.shotSeconds)
     }
+
+    @Test
+    fun `BrewLogConverters preserves nanosecond precision, unlike the epoch-millis it replaced`() {
+        val precise = Instant.ofEpochSecond(1_700_000_000L, 123_456_789L)
+        val nanos = BrewLogConverters.instantToEpochNanos(precise)
+        assertEquals(precise, BrewLogConverters.epochNanosToInstant(nanos))
+    }
+
+    @Test
+    fun `BrewLogConverters round-trips an Instant before the epoch`() {
+        val beforeEpoch = Instant.ofEpochSecond(-5L, 250_000_000L)
+        val nanos = BrewLogConverters.instantToEpochNanos(beforeEpoch)
+        assertEquals(beforeEpoch, BrewLogConverters.epochNanosToInstant(nanos))
+    }
 }

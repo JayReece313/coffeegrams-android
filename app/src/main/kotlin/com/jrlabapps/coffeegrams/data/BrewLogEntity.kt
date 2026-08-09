@@ -72,9 +72,22 @@ object BrewLogConverters {
     @TypeConverter
     fun stringToUuid(value: String): UUID = UUID.fromString(value)
 
+    /**
+     * Nanoseconds since the epoch, not milliseconds: `Instant.now()` on the
+     * JVM can carry sub-millisecond resolution, and truncating to millis
+     * both loses precision on round-trip and risks two brews saved in quick
+     * succession colliding on `date`, which `getAll()`'s `ORDER BY date
+     * DESC` depends on to stay a stable, meaningful newest-first order.
+     * A `Long` of nanos-since-epoch covers roughly ±292 years from 1970,
+     * comfortably enough range for this app.
+     */
     @TypeConverter
-    fun instantToEpochMillis(instant: Instant): Long = instant.toEpochMilli()
+    fun instantToEpochNanos(instant: Instant): Long = instant.epochSecond * 1_000_000_000L + instant.nano
 
     @TypeConverter
-    fun epochMillisToInstant(epochMillis: Long): Instant = Instant.ofEpochMilli(epochMillis)
+    fun epochNanosToInstant(epochNanos: Long): Instant =
+        Instant.ofEpochSecond(
+            Math.floorDiv(epochNanos, 1_000_000_000L),
+            Math.floorMod(epochNanos, 1_000_000_000L),
+        )
 }
