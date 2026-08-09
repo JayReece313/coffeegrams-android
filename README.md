@@ -94,7 +94,7 @@ These are the cross-file consistency rules that break silently if ignored:
 
 ### Status / what's next
 
-As of **2026-08-07**:
+As of **2026-08-08**:
 
 - ✅ Planning complete; plan approved.
 - ✅ Repo created (public); local + GitHub kanban boards populated with M0–M13.
@@ -102,9 +102,12 @@ As of **2026-08-07**:
 - ✅ **M0** — Google Play developer account registered as an **organization** under JR Labs LLC. That account type is what exempts this app from the 12-tester / 14-day closed-test gate.
 - ✅ **M1** — Gradle scaffold, `:core` / `:app` module split, version catalog, CI, and the doc set (`ARCHITECTURE.md`, `DESIGN.md`, `testing.md`). All four gates green: `:core:test`, `:app:testDebugUnitTest`, debug build, release build.
 - ✅ **M2** — all 12 `CoffeeGramsCore` Swift sources ported to pure Kotlin, plus all 49 test cases (`BrewCalculatorTest` 11, `BrewMethodProfileTest` 7, `BrewTimelineBuilderTest` 11, `BrewTimerEngineTest` 20). All four gates green, `:core` compiles with `allWarningsAsErrors`.
-- ✅ **M3** — Material 3 `ColorScheme` (light + dark) and type scale from the 6 iOS color tokens, `BrewMethod`'s placeholder icon mapping ported, and the real adaptive icon + standalone logo mark transliterated from `coffeegrams_logo/render.swift` (replacing the M1 placeholder cup silhouette). All four gates green. Not yet checked on a running emulator/device — worth a quick visual pass next session.
+- ✅ **M3** — Material 3 `ColorScheme` (light + dark) and type scale from the 6 iOS color tokens, `BrewMethod`'s placeholder icon mapping ported, and the real adaptive icon + standalone logo mark transliterated from `coffeegrams_logo/render.swift` (replacing the M1 placeholder cup silhouette). All four gates green, including a real-device visual check of the launcher icon.
+- ✅ **Play Small Business Program** — applied for and confirmed opted in (15% fee rate).
+- ✅ **Physical Android test device acquired** — the M8 hardware blocker (Play Billing cannot be tested on the emulator) is cleared.
 - ⬜ **Next: M4** — persistence: Room entity mirroring `BrewLogRecord`'s 11 columns, DAO, and the `BrewLogStoring` port + in-memory test double.
-- ⚠️ **Hardware gap:** Google Play Billing **cannot be tested on the emulator** — a physical Android device with the Play Store is required. Needed before **M8**. Budget ~$80–200.
-- ⬜ **Still to confirm in Play Console:** Small Business Program opt-in (15% rate — it is *not* automatic), and that organization verification has cleared.
+- ⬜ **Still to confirm in Play Console:** organization verification has cleared (the Small Business Program opt-in succeeding is a good sign, but this wasn't separately reconfirmed).
+
+**Local emulator note:** a known AVD system-image crash and workaround for the primary dev Mac is documented in [`testing.md`](testing.md#prerequisites) — check there before creating a new AVD.
 
 **Boards:** [GitHub project](https://github.com/users/JayReece313/projects/3) · local board `coffeegrams-android` in `~/Documents/claude_code/kanban_board` (`npm start`, then open `http://localhost:4317`).

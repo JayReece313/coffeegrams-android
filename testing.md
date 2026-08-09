@@ -25,6 +25,22 @@ machine-specific. If it is missing:
 echo "sdk.dir=$HOME/Library/Android/sdk" > local.properties
 ```
 
+**Emulator AVDs — avoid `system-images;android-37.0;google_apis;arm64-v8a` on
+the primary dev Mac (M4 Max, macOS 26.3.1):** it crashes on boot with a
+`SIGSEGV` inside QEMU's `AddressSpaceDevicePing` (the graphics-passthrough
+channel) — a genuine QEMU bug, not a config mistake, and unrelated to `-gpu`
+flags. Use `system-images;android-34;google_apis;arm64-v8a` instead (revision
+14 as of 2026-08-08), which boots clean. Reconfirm this if the emulator
+package or either system image is ever updated.
+
+**A coding-agent session cannot itself run the emulator on this machine** —
+launching `qemu-system-aarch64` from inside a sandboxed coding session hits
+`mprotect: Permission denied` regardless of flags, even though `sysctl
+kern.hv_support` and the binary's own codesigning entitlements are both fine.
+The emulator must be launched from a normal, user-driven terminal outside the
+session; `adb`/`gradlew :app:installDebug`/screenshotting from inside the
+session works fine once a device is already up and registered with `adb`.
+
 ---
 
 ## The suites
