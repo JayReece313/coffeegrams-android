@@ -117,22 +117,20 @@ the iOS sibling's ViewModel test suites (same inputs, same expected values).
 `CalculatorViewModelTest` (9) + `BrewPresetTest` (1) need no test double —
 pure value logic. `GuidedBrewViewModelTest` (14) and `EspressoShotViewModelTest`
 (4) drive `FakeAdvancingClock`/`RecordingHaptics` and call `tick()` directly,
-exactly like iOS calls `tickOnce()` — the real `viewModelScope` loop never
-fires during a test because no test calls `advanceUntilIdle()`/`advanceTimeBy()`,
-so it stays parked at its `delay()` for the test's duration. Constructing
+exactly like iOS calls `tickOnce()` — the real `viewModelScope`-owned ticker
+(started/stopped in lockstep with the timer's active state, not running
+unconditionally) never actually fires during a test because no test calls
+`advanceUntilIdle()`/`advanceTimeBy()`, so it stays parked at its `delay()`
+for the test's duration regardless of whether it's been started. Constructing
 either VM requires `Dispatchers.setMain(StandardTestDispatcher())` in
 `@BeforeTest`/`Dispatchers.resetMain()` in `@AfterTest`, since
-`viewModelScope.launch` resolves `Dispatchers.Main` immediately on
-construction. `ColdBrewViewModelTest` (3) reuses M5's
+`viewModelScope.launch` resolves `Dispatchers.Main` immediately when first
+called. `ColdBrewViewModelTest` (3) reuses M5's
 `RecordingNotificationScheduler` (extended with an `authRequestCount`
 counter to match the iOS spy's `authRequests`). `BrewReminderTest` (2)
 covers the pure reminder-content builder. `PurchaseControllerTest` (6) uses
 a new `ScriptedPurchases` double against the `Purchases` port pulled forward
-from M8 (same early-port/late-adapter split as `MonotonicClock`). One gradle
-setting needed: `testOptions { unitTests.isReturnDefaultValues = true }` —
-`PurchaseController.purchase()`'s catch branch logs via `android.util.Log`,
-which the Android stub jar throws on by default under a plain JVM test
-without it.
+from M8 (same early-port/late-adapter split as `MonotonicClock`).
 
 ### 3. Instrumented tests (`androidTest`)
 
