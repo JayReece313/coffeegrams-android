@@ -42,4 +42,55 @@
     <string name="paywall_working">Please wait…</string>
     <string name="paywall_restore_button">Restore Purchase</string>
     <string name="paywall_footnote">A one-time purchase. No account required.</string>
+
+    <!-- Guided brew (M7 PR2) -->
+    <string name="guided_brew_status_done">DONE</string>
+    <string name="guided_brew_status_paused">PAUSED</string>
+    <string name="guided_brew_status_over_target">OVER TARGET</string>
+    <string name="guided_brew_status_tap_done">TAP DONE</string>
+    <string name="guided_brew_status_running">RUNNING</string>
+    <string name="guided_brew_status_ready">READY</string>
+    <string name="guided_brew_your_move">Your move</string>
+    <string name="guided_brew_complete_message">Brew complete — enjoy</string>
+    <string name="guided_brew_total_elapsed">TOTAL %1$s</string>
+    <string name="guided_brew_total_elapsed_description">Total elapsed %1$s</string>
+    <string name="guided_brew_save_to_log">Save to Log</string>
+    <string name="guided_brew_saved_to_log">Saved to log</string>
+    <string name="guided_brew_brew_again">Brew Again</string>
+    <string name="guided_brew_start_timer">Start Timer</string>
+    <string name="guided_brew_pause">Pause</string>
+    <string name="guided_brew_resume">Resume</string>
+    <string name="guided_brew_end_brew">End Brew</string>
+    <string name="guided_brew_skip_step">Skip step</string>
+    <string name="guided_brew_leave_title">Leave brew?</string>
+    <string name="guided_brew_leave_message">Your timer will be lost.</string>
+    <string name="guided_brew_leave_confirm">Leave</string>
+    <string name="guided_brew_leave_cancel">Cancel</string>
+
+    <!-- Espresso shot (M7 PR2) -->
+    <string name="espresso_dose_label">Dose</string>
+    <string name="espresso_yield_label">Yield</string>
+    <string name="espresso_status_ready">READY</string>
+    <string name="espresso_status_building">BUILDING</string>
+    <string name="espresso_status_on_target">ON TARGET</string>
+    <string name="espresso_status_running_long">RUNNING LONG</string>
+    <string name="espresso_stopwatch_description">%1$s, %2$d seconds</string>
+    <string name="espresso_seconds_value">%1$ds</string>
+    <string name="espresso_start">Start Shot</string>
+    <string name="espresso_stop">Stop</string>
+    <string name="espresso_save_to_log">Save to Log</string>
+    <string name="espresso_saved_to_log">Saved to log</string>
+    <string name="espresso_reset">Reset</string>
+
+    <!-- Cold brew (M7 PR2) -->
+    <string name="cold_brew_steep_time_caption">STEEP TIME</string>
+    <string name="cold_brew_steep_hours_value">%1$d hours</string>
+    <string name="cold_brew_instructions">Combine coarse grounds with cold water, then refrigerate.</string>
+    <string name="cold_brew_start_steep">Start Steep</string>
+    <string name="cold_brew_reminder_scheduled">Saved · reminder set for %1$dh</string>
+    <string name="cold_brew_reminder_denied">Saved · enable notifications in Settings for a reminder</string>
+    <string name="cold_brew_saved_to_log">Saved to log</string>
+    <string name="cold_brew_coffee_label">Coffee</string>
+    <string name="cold_brew_water_label">Water</string>
+    <string name="cold_brew_ratio_label_short">Ratio</string>
 </resources>
