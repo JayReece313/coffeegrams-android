@@ -23,6 +23,8 @@ class InMemoryBrewLogStore : BrewLogStoring {
 
     override suspend fun entries(): List<BrewLogEntry> = storage.values.sortedByDescending { it.date }
 
+    override suspend fun entry(id: UUID): BrewLogEntry? = storage[id]
+
     override suspend fun delete(id: UUID) {
         storage.remove(id)
     }

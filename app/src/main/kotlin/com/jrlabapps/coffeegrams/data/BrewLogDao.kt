@@ -23,6 +23,9 @@ interface BrewLogDao {
     @Query("SELECT * FROM brew_log ORDER BY date DESC")
     suspend fun getAll(): List<BrewLogEntity>
 
+    @Query("SELECT * FROM brew_log WHERE id = :id LIMIT 1")
+    suspend fun getById(id: UUID): BrewLogEntity?
+
     @Query("DELETE FROM brew_log WHERE id = :id")
     suspend fun deleteById(id: UUID)
 

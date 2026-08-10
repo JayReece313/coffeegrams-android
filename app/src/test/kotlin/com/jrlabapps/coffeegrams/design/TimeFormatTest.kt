@@ -5,6 +5,18 @@ import kotlin.test.assertEquals
 
 class TimeFormatTest {
     @Test
+    fun `clock formats minutes and seconds, zero-padded`() {
+        assertEquals("2:14", TimeFormat.clock(134))
+        assertEquals("1:05", TimeFormat.clock(65))
+        assertEquals("0:00", TimeFormat.clock(0))
+    }
+
+    @Test
+    fun `clock negative input clamps to zero`() {
+        assertEquals("0:00", TimeFormat.clock(-5))
+    }
+
+    @Test
     fun `zero reads as zero seconds`() {
         assertEquals("zero seconds", TimeFormat.spoken(0))
     }

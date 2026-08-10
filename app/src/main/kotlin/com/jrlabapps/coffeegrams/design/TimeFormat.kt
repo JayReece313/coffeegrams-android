@@ -1,5 +1,7 @@
 package com.jrlabapps.coffeegrams.design
 
+import java.util.Locale
+
 /**
  * Spoken-digit time formatting for accessibility. TalkBack reads a
  * colon-separated readout (e.g. "2:14") as raw digits, which is awkward to
@@ -11,6 +13,14 @@ package com.jrlabapps.coffeegrams.design
  * durations beyond that.
  */
 object TimeFormat {
+    /** e.g. `134` -> "2:14"; `65` -> "1:05". Negative input clamps to "0:00". */
+    fun clock(totalSeconds: Int): String {
+        val clamped = totalSeconds.coerceAtLeast(0)
+        val minutes = clamped / 60
+        val seconds = clamped % 60
+        return String.format(Locale.US, "%d:%02d", minutes, seconds)
+    }
+
     /** e.g. `134` -> "two minutes fourteen seconds"; `60` -> "one minute"; `0` -> "zero seconds". */
     fun spoken(totalSeconds: Int): String {
         // words() only has tens-place vocabulary through "fifty" -- clamp to

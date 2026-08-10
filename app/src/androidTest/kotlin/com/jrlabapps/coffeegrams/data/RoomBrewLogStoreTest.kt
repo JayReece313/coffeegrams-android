@@ -95,6 +95,19 @@ class RoomBrewLogStoreTest {
     }
 
     @Test
+    fun entryReturnsTheMatchingSavedEntryById() = runTest {
+        val saved = entry()
+        store.add(saved)
+        assertEquals(saved, store.entry(saved.id))
+    }
+
+    @Test
+    fun entryReturnsNullForANonexistentId() = runTest {
+        store.add(entry())
+        assertNull(store.entry(UUID.randomUUID()))
+    }
+
+    @Test
     fun deleteRemovesTheEntry() = runTest {
         val saved = entry()
         store.add(saved)

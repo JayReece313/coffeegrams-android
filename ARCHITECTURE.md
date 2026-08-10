@@ -4,8 +4,9 @@ Two layers: a **pure Kotlin logic module** under a **thin Compose app**. Every
 side effect crosses a port. This mirrors the iOS app deliberately — the shared
 shape is what makes the two codebases maintainable in parallel.
 
-> **Status (2026-08-09):** M2–M6 complete, M7 in progress (PR1 of 3
-> landed). `:core` is fully ported: all 12 Models/Logic files and the
+> **Status (2026-08-09):** M2–M6 complete, M7 in progress (PR1 and PR2 of 3
+> landed, PR3 — this document's latest update — adds the brew log).
+> `:core` is fully ported: all 12 Models/Logic files and the
 > `MonotonicClock` + `BrewLogStoring` ports, plus all 49 conformance tests
 > (`./gradlew :core:test`, headless, warnings-as-errors). The Compose theme
 > (`ui/theme/`) carries the real palette, type scale, and (new in M7) a
@@ -31,9 +32,21 @@ shape is what makes the two codebases maintainable in parallel.
 > `platform/UnavailablePurchases.kt` (always not-purchased), until M8
 > supplies the real `BillingClient` adapter — a straight swap of the
 > adapter behind the port, not a change to `PurchaseController` or its
-> callers. PR2 (Guided Brew/Espresso/Cold Brew screens) and PR3 (brew log)
-> are still to come under the same M7 board card. This document is updated
-> as each milestone/PR lands.
+> callers. **M7 PR2** added the three brewing screens themselves — Guided
+> Brew, Espresso Shot, Cold Brew — routed through `BrewSessionScreen`, each
+> ending in a "Save to Log" action that writes a `BrewLogEntry` through
+> `CoffeeGramsApplication.brewLogStore`. **M7 PR3** closes the loop with the
+> brew log itself: `LogScreen` (the saved-brew list, reached from the method
+> picker's toolbar) and `LogDetailScreen` (view/rate/annotate/delete one
+> brew), backed by new `LogViewModel`/`LogDetailViewModel`s and a shared
+> `StarRating` composable. `LogViewModel` reloads explicitly rather than
+> observing a `Flow` — see its doc comment — since `BrewLogStoring` is a
+> one-shot `suspend` port, matching the same reload-on-entry shape the nav
+> graph already gives every route. **M7 is now feature-complete**; what
+> remains before the milestone can move to Done is a full
+> `connectedAndroidTest` pass on a device/emulator (not run from this
+> session — see `testing.md`'s emulator note) and Qodo review. This
+> document is updated as each milestone/PR lands.
 
 ---
 
@@ -42,8 +55,8 @@ shape is what makes the two codebases maintainable in parallel.
 ```mermaid
 graph TD
     subgraph app[":app — Android, Jetpack Compose"]
-        UI["Compose screens<br/>method picker · calculator · paywall — done (PR1)<br/>guided brew · espresso · cold brew · brew log — PR2/PR3"]
-        VM["ViewModels — done<br/>Calculator · GuidedBrew · EspressoShot · ColdBrew · PurchaseController"]
+        UI["Compose screens — all done<br/>method picker · calculator · paywall (PR1)<br/>guided brew · espresso · cold brew (PR2)<br/>brew log · brew log detail (PR3)"]
+        VM["ViewModels — done<br/>Calculator · GuidedBrew · EspressoShot · ColdBrew<br/>PurchaseController · Log · LogDetail"]
         AD["Adapters<br/>SystemClock · Haptics · Notifications — done<br/>Room — done · Play Billing — M8"]
     end
 
@@ -189,15 +202,16 @@ See [`testing.md`](testing.md) for how to run each suite.
 | `app/src/main/kotlin/.../ui/navigation/` | `CoffeeGramsNavHost`, type-safe `@Serializable` routes *(M7 PR1)* |
 | `app/src/main/kotlin/.../ui/methodpicker/`, `.../ui/calculator/`, `.../ui/paywall/` | Method Picker, Calculator, Paywall screens *(M7 PR1, done)* |
 | `app/src/androidTest/kotlin/.../ui/` | Compose UI tests per screen package, mirroring `main`'s layout |
-| `app/src/main/kotlin/.../ui/guidedbrew/`, `.../ui/espresso/`, `.../ui/coldbrew/`, `.../ui/log/` | Remaining screens *(M7 PR2/PR3)* |
+| `app/src/main/kotlin/.../ui/guidedbrew/`, `.../ui/espresso/`, `.../ui/coldbrew/` | Guided Brew, Espresso Shot, Cold Brew screens, routed through `BrewSessionScreen` *(M7 PR2, done)* |
+| `app/src/main/kotlin/.../ui/log/` | `LogScreen` (list), `LogDetailScreen` (view/rate/annotate/delete), `StarRating` *(M7 PR3, done)* |
 | `app/src/main/kotlin/.../data/` | `BrewLogEntity`, `BrewLogDao`, `BrewLogDatabase`, `RoomBrewLogStore` — the `BrewLogStoring` adapter |
 | `app/src/test/kotlin/.../data/` | `InMemoryBrewLogStore` test double + its own contract test, entity↔entry mapping test |
 | `app/src/androidTest/kotlin/.../data/` | `RoomBrewLogStoreTest` — the same contract, against real Room (needs a device/emulator) |
 | `app/schemas/` | Room's exported schema JSON (`exportSchema = true`) — the v1 baseline future migrations diff against |
 | `app/src/main/kotlin/.../platform/` | `LiveMonotonicClock`, `LiveHaptics`, `LiveNotificationScheduler`, `ReminderWorker`, `BrewReminder`, `UnavailablePurchases` |
 | `app/src/test/kotlin/.../platform/` | `FakeAdvancingClock`, `RecordingHaptics`, `RecordingNotificationScheduler` test doubles + their tests, plus JVM tests for `LiveNotificationScheduler.buildWorkRequest`, `ReminderWorker.contentFrom`, `BrewReminder`, and `UnavailablePurchases` |
-| `app/src/main/kotlin/.../viewmodel/` | `CalculatorViewModel`, `BrewPreset`, `GuidedBrewViewModel`, `EspressoShotViewModel`, `ColdBrewViewModel`, `PurchaseController` |
-| `app/src/test/kotlin/.../viewmodel/` | Their 39 ported conformance tests, plus `ScriptedPurchases` (the `Purchases` test double) |
+| `app/src/main/kotlin/.../viewmodel/` | `CalculatorViewModel`, `BrewPreset`, `GuidedBrewViewModel`, `EspressoShotViewModel`, `ColdBrewViewModel`, `PurchaseController`, `LogViewModel`, `LogDetailViewModel` |
+| `app/src/test/kotlin/.../viewmodel/` | Their ported conformance tests, plus `ScriptedPurchases` (the `Purchases` test double) and the `LogViewModel`/`LogDetailViewModel` tests (against `InMemoryBrewLogStore`) |
 | `app/src/main/kotlin/.../billing/` | `BillingClient` adapter *(M8)* |
 | `app/src/main/res/values/strings.xml` | UI strings, named `<screen>_<element>` (e.g. `method_picker_unlock_pro`, `calculator_start_espresso`) — the package each screen lives under in `ui/` |
 | `gradle/libs.versions.toml` | Every dependency version, in one place |

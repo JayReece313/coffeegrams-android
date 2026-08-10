@@ -8,6 +8,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.jrlabapps.coffeegrams.core.BrewMethod
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -56,5 +57,17 @@ class MethodPickerScreenTest {
         composeTestRule.onNodeWithText("Unlock Pro").performClick()
 
         composeTestRule.onNodeWithText("CoffeeGrams Pro").assertExists()
+    }
+
+    @Test
+    fun brewLogToolbarActionNavigatesToTheLog() {
+        var viewedLog = false
+        composeTestRule.setContent {
+            MethodPickerScreen(onMethodSelected = {}, onViewLog = { viewedLog = true })
+        }
+
+        composeTestRule.onNodeWithContentDescription("Brew log").performClick()
+
+        assertTrue(viewedLog)
     }
 }

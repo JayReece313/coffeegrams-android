@@ -93,4 +93,40 @@
     <string name="cold_brew_coffee_label">Coffee</string>
     <string name="cold_brew_water_label">Water</string>
     <string name="cold_brew_ratio_label_short">Ratio</string>
+
+    <!-- Star rating (M7 PR3), shared by the log list and detail screens -->
+    <plurals name="star_rating_star_count">
+        <item quantity="one">%1$d star</item>
+        <item quantity="other">%1$d stars</item>
+    </plurals>
+
+    <!-- Brew log list (M7 PR3) -->
+    <string name="log_title">Brew Log</string>
+    <string name="log_empty_title">No brews yet</string>
+    <string name="log_empty_description">Finish a brew and tap Save to Log.</string>
+    <string name="log_row_subtitle">%1$dg → %2$dg · 1:%3$d · %4$s</string>
+    <string name="log_row_timing_actual_only">%1$s actual</string>
+    <string name="log_row_timing_actual_and_planned">%1$s actual · %2$s planned</string>
+    <string name="log_delete_action">Delete</string>
+    <string name="method_picker_view_log">Brew log</string>
+
+    <!-- Brew log detail (M7 PR3) -->
+    <string name="log_detail_method_label">Method</string>
+    <string name="log_detail_dose_label">Dose</string>
+    <string name="log_detail_water_label">Water</string>
+    <string name="log_detail_yield_label">Yield</string>
+    <string name="log_detail_ratio_label">Ratio</string>
+    <string name="log_detail_shot_time_label">Shot time</string>
+    <string name="log_detail_planned_time_label">Planned time</string>
+    <string name="log_detail_actual_time_label">Actual time</string>
+    <string name="log_detail_date_label">Date</string>
+    <string name="log_detail_grams_value">%1$d g</string>
+    <string name="log_detail_ratio_value">1:%1$d</string>
+    <string name="log_detail_shot_seconds_value">%1$ds</string>
+    <string name="log_detail_delta_over">+%1$s over plan</string>
+    <string name="log_detail_delta_under">−%1$s under plan</string>
+    <string name="log_detail_rating_header">Rating</string>
+    <string name="log_detail_notes_header">Notes</string>
+    <string name="log_detail_notes_placeholder">Tasting notes</string>
+    <string name="log_detail_delete_brew">Delete Brew</string>
 </resources>
