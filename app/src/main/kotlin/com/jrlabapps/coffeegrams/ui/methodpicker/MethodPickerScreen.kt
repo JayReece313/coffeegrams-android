@@ -16,11 +16,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
@@ -56,10 +58,11 @@ import com.jrlabapps.coffeegrams.ui.theme.Spacing
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MethodPickerScreen(onMethodSelected: (BrewMethod) -> Unit, modifier: Modifier = Modifier) {
+fun MethodPickerScreen(onMethodSelected: (BrewMethod) -> Unit, onViewLog: () -> Unit = {}, modifier: Modifier = Modifier) {
     val purchases = currentApplication().purchaseController
     val isPremiumUnlocked by purchases.isPremiumUnlocked.collectAsStateWithLifecycle()
     var showPaywall by remember { mutableStateOf(false) }
+    val viewLogDescription = stringResource(R.string.method_picker_view_log)
 
     Scaffold(
         modifier = modifier,
@@ -73,6 +76,9 @@ fun MethodPickerScreen(onMethodSelected: (BrewMethod) -> Unit, modifier: Modifie
                             Spacer(Modifier.width(Spacing.smallSpacing))
                             Text(stringResource(R.string.method_picker_unlock_pro))
                         }
+                    }
+                    IconButton(onClick = onViewLog) {
+                        Icon(Icons.AutoMirrored.Filled.ListAlt, contentDescription = viewLogDescription)
                     }
                 },
             )

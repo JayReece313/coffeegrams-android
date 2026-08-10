@@ -132,6 +132,21 @@ covers the pure reminder-content builder. `PurchaseControllerTest` (6) uses
 a new `ScriptedPurchases` double against the `Purchases` port pulled forward
 from M8 (same early-port/late-adapter split as `MonotonicClock`).
 
+**`LogViewModel`/`LogDetailViewModel` (M7 PR3), landed:** 8 cases across 2
+files, against `InMemoryBrewLogStore` (the same test double M4 built).
+Unlike M6's ViewModels above, these use
+`Dispatchers.setMain(UnconfinedTestDispatcher())` rather than
+`StandardTestDispatcher()`: every `viewModelScope.launch` here runs against
+an in-memory map with no real suspension point, so eager/synchronous
+execution is what lets assertions read post-launch state without a separate
+`advanceUntilIdle()` call — `StandardTestDispatcher` would leave the launch
+queued and the assertion would see stale state. `LogViewModelTest` (3) —
+loads newest-first on init, starts empty, delete refreshes the list.
+`LogDetailViewModelTest` (5) — loads the matching entry by id, `setRating`
+updates local state immediately and persists, tapping the current rating
+clears it back to unrated, `saveNotes` trims and empty becomes `null`,
+`delete` invokes its callback.
+
 ### 3. Instrumented tests (`androidTest`)
 
 ```bash
@@ -147,20 +162,43 @@ real (in-memory-mode) Room database, proving the actual SQL, `TypeConverters`
 (`UUID`↔`TEXT`, `Instant`↔epoch-millis `INTEGER`), and DAO wiring are correct,
 not just the interface contract in isolation.
 
-**Compose UI tests (M7 PR1), landed:** 11 cases across 3 files, the first
-Compose UI tests in the repo (no prior precedent to follow — uses
-`androidx.compose.ui.test.junit4.v2.createComposeRule`, the current
-non-deprecated API). `MethodPickerScreenTest` (3) — an unlocked method
-navigates, a locked one opens the paywall instead of navigating, the
-toolbar "Unlock Pro" action also opens it. `CalculatorScreenTest` (5) —
-mode toggle switches the input label, the ratio slider carries a content
-description ("Brew ratio" — the concrete "numeric readout needs a label"
-case), the CTA renders disabled with its method-specific label (still
-unwired — its destination doesn't exist until PR2), AeroPress presets
-render. `PaywallScreenTest` (3) — all 4 benefits render, the buy button
-never fabricates a price when `priceText` is null, restore doesn't dismiss
-the sheet when there's nothing to restore. Remaining screens (guided brew,
-espresso, cold brew, brew log + star rating) get theirs in PR2/PR3.
+**Compose UI tests, all 5 screens landed across M7 PR1–PR3:** 30 cases
+across 8 files, using `androidx.compose.ui.test.junit4.v2.createComposeRule`
+(the current non-deprecated API).
+
+- `MethodPickerScreenTest` (4) — an unlocked method navigates, a locked one
+  opens the paywall instead of navigating, the toolbar "Unlock Pro" action
+  also opens it, the toolbar "Brew log" action navigates to the log *(PR3)*.
+- `CalculatorScreenTest` (7) — mode toggle switches the input label, the
+  ratio slider carries a content description ("Brew ratio"), the CTA
+  renders with its method-specific label and navigates on tap, AeroPress
+  presets render.
+- `PaywallScreenTest` (3) — all 4 benefits render, the buy button never
+  fabricates a price when `priceText` is null, restore doesn't dismiss the
+  sheet when there's nothing to restore.
+- `GuidedBrewScreenTest` (4), `EspressoShotScreenTest` (4),
+  `ColdBrewScreenTest` (2) *(PR2)* — timer/step rendering and the "Save to
+  Log" button's presence; the actual Room write isn't exercised from these
+  tests (see below).
+- `LogScreenTest` (3), `LogDetailScreenTest` (3) *(PR3)* — the empty state,
+  tapping a row navigates with its id, deleting a row removes it from the
+  store; the detail screen's summary rendering, tapping a star persists the
+  rating, and deleting invokes `onDeleted`.
+
+**Why the log screens build their own in-memory Room database per test**
+(mirroring `RoomBrewLogStoreTest`'s `@Before`/`@After`) rather than reading
+through `currentApplication().brewLogStore`: that would hit the real
+on-device database and leak saved rows between test runs, since Room isn't
+reset between instrumented test runs the way `test`-sourceSet doubles are.
+`LogScreen`/`LogDetailScreen` both take an optional `store: BrewLogStoring`
+parameter (defaulting to `currentApplication().brewLogStore`) for exactly
+this seam — the same reason `GuidedBrewViewModel` etc. take their ports as
+constructor parameters instead of reaching for the application singleton
+internally. This is also why PR2's guided-brew/espresso/cold-brew screen
+tests stop at asserting the "Save to Log" button is present rather than
+tapping it through to a real write — those screens read
+`currentApplication().brewLogStore` directly with no override seam yet;
+revisit if a future PR needs to assert the save itself.
 
 ### 4. Build gates
 

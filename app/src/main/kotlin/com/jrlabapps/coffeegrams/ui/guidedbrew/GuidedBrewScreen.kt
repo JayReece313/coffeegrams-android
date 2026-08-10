@@ -208,9 +208,9 @@ private fun TimerBlock(
     val timerActiveColor = MaterialTheme.colorScheme.tertiary
     val idleColor = MaterialTheme.colorScheme.onSurface
     val (timerText, timerColor) = when {
-        overrunSeconds != null -> "+${formatClock(overrunSeconds)}" to (if (isPaused) idleColor else timerActiveColor)
+        overrunSeconds != null -> "+${TimeFormat.clock(overrunSeconds)}" to (if (isPaused) idleColor else timerActiveColor)
         isAwaitingManualAdvance -> stringResource(R.string.guided_brew_your_move) to idleColor
-        else -> formatClock(remainingSeconds) to (if (isRunning) timerActiveColor else idleColor)
+        else -> TimeFormat.clock(remainingSeconds) to (if (isRunning) timerActiveColor else idleColor)
     }
 
     val instructionText = if (isFinished) {
@@ -232,7 +232,7 @@ private fun TimerBlock(
         instructionText?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
         if (hasStarted || isFinished) {
             Text(
-                stringResource(R.string.guided_brew_total_elapsed, formatClock(totalElapsedSeconds)),
+                stringResource(R.string.guided_brew_total_elapsed, TimeFormat.clock(totalElapsedSeconds)),
                 style = MaterialTheme.typography.labelSmall,
                 modifier = Modifier.semantics { contentDescription = totalDescription },
             )
@@ -330,13 +330,7 @@ private fun Controls(
 private fun stepDetailText(step: BrewStep): String? = when (step) {
     is BrewStep.Bloom -> "${formatGrams(step.targetGrams)} g"
     is BrewStep.Pour -> "${formatGrams(step.targetCumulativeGrams)} g"
-    else -> step.duration?.let { formatClock(it) }
-}
-
-private fun formatClock(totalSeconds: Int): String {
-    val minutes = totalSeconds / 60
-    val seconds = totalSeconds % 60
-    return String.format(Locale.US, "%d:%02d", minutes, seconds)
+    else -> step.duration?.let { TimeFormat.clock(it) }
 }
 
 private fun formatGrams(value: Double): String =
