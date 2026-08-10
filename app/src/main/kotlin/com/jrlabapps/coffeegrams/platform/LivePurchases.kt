@@ -29,6 +29,8 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlin.coroutines.resumeWithException
 
 private const val PRO_PRODUCT_ID = "com.jrlabapps.coffeegrams.pro"
@@ -72,10 +74,21 @@ internal fun classifyPurchaseResponse(responseCode: Int, purchaseState: Int?): B
  *
  * Acknowledgement is mandatory on Play — unlike StoreKit's `finish()`, an
  * unacknowledged purchase is auto-refunded within days (see `testing.md`).
- * [isPurchased] and a fresh [purchase] both acknowledge defensively, so a
- * killed process or a missed callback can never leave a purchase to expire
- * unacknowledged; [restore] delegates straight to [isPurchased] for the
- * same reason.
+ * [isPurchased] and a fresh [purchase] both acknowledge defensively and
+ * check the acknowledgement call's own result — a purchase only reads as
+ * owned once acknowledgement has actually succeeded, never on the
+ * optimistic assumption that it did; [restore] delegates straight to
+ * [isPurchased] for the same reason.
+ *
+ * [isPurchased], [localizedPrice], and [restore] never throw — matching the
+ * [Purchases] port's contract, where [purchase] is the only method
+ * documented to throw [PurchaseUnavailableException]. A failed
+ * `BillingClient` connection (no Play Store, no network, service
+ * disconnected) is a normal, expected condition here, not exceptional: it
+ * degrades to "not purchased" / no price rather than propagating, which
+ * matters most for [isPurchased] since [PurchaseController.start] calls it
+ * from `CoffeeGramsApplication.onCreate` — an uncaught exception there
+ * would crash the app on launch.
  */
 class LivePurchases(context: Context) : Purchases, PurchasesUpdatedListener {
 
@@ -100,6 +113,7 @@ class LivePurchases(context: Context) : Purchases, PurchasesUpdatedListener {
         .build()
 
     private var connected = false
+    private val connectionMutex = Mutex()
 
     fun attach(activity: Activity) {
         this.activity = activity
@@ -109,44 +123,64 @@ class LivePurchases(context: Context) : Purchases, PurchasesUpdatedListener {
         this.activity = null
     }
 
-    private suspend fun ensureConnected() {
-        if (connected) return
-        suspendCancellableCoroutine { continuation ->
-            billingClient.startConnection(object : BillingClientStateListener {
-                override fun onBillingSetupFinished(billingResult: BillingResult) {
-                    connected = billingResult.responseCode == BillingResponseCode.OK
-                    if (continuation.isActive) continuation.resume(Unit) { _, _, _ -> }
-                }
+    /**
+     * Closes the `BillingClient` connection. Not wired to any lifecycle
+     * callback — [LivePurchases] is an application-scoped singleton living
+     * for the process lifetime, and `Application.onTerminate` is never
+     * called in production, so there is no reliable hook to call this
+     * automatically. Exists for completeness (and tests) rather than an
+     * active shutdown path.
+     */
+    fun close() {
+        billingClient.endConnection()
+    }
 
-                override fun onBillingServiceDisconnected() {
-                    connected = false
-                }
-            })
+    /**
+     * Connects if needed and reports whether the client is ready — never
+     * throws. [connectionMutex] serializes concurrent callers so two
+     * suspended calls can't each start their own `startConnection()`.
+     */
+    private suspend fun ensureConnected(): Boolean {
+        if (connected) return true
+        connectionMutex.withLock {
+            if (connected) return@withLock
+            val billingResult = suspendCancellableCoroutine { continuation ->
+                billingClient.startConnection(object : BillingClientStateListener {
+                    override fun onBillingSetupFinished(billingResult: BillingResult) {
+                        if (continuation.isActive) continuation.resume(billingResult) { _, _, _ -> }
+                    }
+
+                    override fun onBillingServiceDisconnected() {
+                        connected = false
+                    }
+                })
+            }
+            connected = billingResult.responseCode == BillingResponseCode.OK
         }
+        return connected
     }
 
     private suspend fun proPurchase(): Purchase? {
-        ensureConnected()
+        if (!ensureConnected()) return null
         val params = QueryPurchasesParams.newBuilder().setProductType(ProductType.INAPP).build()
         return billingClient.queryPurchasesAsync(params).purchasesList.firstOrNull { PRO_PRODUCT_ID in it.products }
     }
 
-    private suspend fun acknowledgeIfNeeded(purchase: Purchase) {
-        if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED && !purchase.isAcknowledged) {
-            val params = AcknowledgePurchaseParams.newBuilder().setPurchaseToken(purchase.purchaseToken).build()
-            billingClient.acknowledgePurchase(params)
-        }
+    /** Returns whether [purchase] is acknowledged once this returns — checking the ack call's own result, not assuming it succeeded. */
+    private suspend fun acknowledgeIfNeeded(purchase: Purchase): Boolean {
+        if (purchase.purchaseState != Purchase.PurchaseState.PURCHASED) return false
+        if (purchase.isAcknowledged) return true
+        val params = AcknowledgePurchaseParams.newBuilder().setPurchaseToken(purchase.purchaseToken).build()
+        return billingClient.acknowledgePurchase(params).responseCode == BillingResponseCode.OK
     }
 
     override suspend fun isPurchased(): Boolean {
         val purchase = proPurchase() ?: return false
-        if (purchase.purchaseState != Purchase.PurchaseState.PURCHASED) return false
-        acknowledgeIfNeeded(purchase)
-        return true
+        return acknowledgeIfNeeded(purchase)
     }
 
     override suspend fun localizedPrice(): String? {
-        ensureConnected()
+        if (!ensureConnected()) return null
         val result = billingClient.queryProductDetails(proProductDetailsParams())
         return result.productDetailsList
             ?.firstOrNull { it.productId == PRO_PRODUCT_ID }
@@ -155,7 +189,7 @@ class LivePurchases(context: Context) : Purchases, PurchasesUpdatedListener {
     }
 
     override suspend fun purchase(): PurchaseOutcome {
-        ensureConnected()
+        if (!ensureConnected()) throw PurchaseUnavailableException()
         val launchingActivity = activity ?: throw PurchaseUnavailableException()
         val productDetails = billingClient.queryProductDetails(proProductDetailsParams())
             .productDetailsList
@@ -190,6 +224,15 @@ class LivePurchases(context: Context) : Purchases, PurchasesUpdatedListener {
      * latter arrives with no [pendingPurchase] waiting, which is why
      * [entitlementUpdates] is pushed unconditionally on a purchased
      * outcome rather than only alongside a continuation resume.
+     *
+     * A `PURCHASED` classification only resolves as [PurchaseOutcome.PURCHASED]
+     * once [acknowledgeIfNeeded] actually confirms acknowledgement — reporting
+     * success on the optimistic assumption it worked is exactly how a
+     * purchase goes unacknowledged and gets auto-refunded (see the class
+     * doc comment). An acknowledgement failure surfaces as
+     * [PurchaseUnavailableException]; the purchase itself isn't lost —
+     * Play still has it, and the next [isPurchased]/[restore] call retries
+     * the acknowledgement.
      */
     override fun onPurchasesUpdated(billingResult: BillingResult, purchases: MutableList<Purchase>?) {
         val continuation = pendingPurchase
@@ -199,9 +242,13 @@ class LivePurchases(context: Context) : Purchases, PurchasesUpdatedListener {
         when (val classified = classifyPurchaseResponse(billingResult.responseCode, purchase?.purchaseState)) {
             is BillingOutcome.Result -> if (classified.outcome == PurchaseOutcome.PURCHASED) {
                 scope.launch {
-                    (purchase ?: proPurchase())?.let { acknowledgeIfNeeded(it) }
-                    entitlementUpdates.tryEmit(true)
-                    continuation?.resume(classified.outcome) { _, _, _ -> }
+                    val acknowledged = (purchase ?: proPurchase())?.let { acknowledgeIfNeeded(it) } ?: false
+                    if (acknowledged) {
+                        entitlementUpdates.tryEmit(true)
+                        continuation?.resume(PurchaseOutcome.PURCHASED) { _, _, _ -> }
+                    } else {
+                        continuation?.resumeWithException(PurchaseUnavailableException())
+                    }
                 }
             } else {
                 continuation?.resume(classified.outcome) { _, _, _ -> }
