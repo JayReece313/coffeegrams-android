@@ -112,6 +112,15 @@ mirrors the iOS sibling's own precedent of never unit-testing
 notification *delivery* is verified manually on a device/emulator, the same
 way Play Billing and Doze are scoped below.
 
+**`LivePurchases` (M8), landed:** the same live-adapter-vs-pure-function
+split applies. `classifyPurchaseResponse` — the `BillingResponseCode`/
+`Purchase.PurchaseState` → `PurchaseOutcome` mapping — is pulled out as a
+function of plain `Int`s and covered by 6 cases in `LivePurchasesTest`. The
+rest of `LivePurchases` (the actual `BillingClient` connection, purchase
+flow, and acknowledgement calls) is exactly the "cannot be automated" case
+described below: it needs a real Play Store connection that neither a unit
+test nor the emulator can provide.
+
 **ViewModels (M6), landed:** 39 cases across 7 files, conformance-matched to
 the iOS sibling's ViewModel test suites (same inputs, same expected values).
 `CalculatorViewModelTest` (9) + `BrewPresetTest` (1) need no test double —
@@ -175,7 +184,12 @@ across 8 files, using `androidx.compose.ui.test.junit4.v2.createComposeRule`
   presets render.
 - `PaywallScreenTest` (3) — all 4 benefits render, the buy button never
   fabricates a price when `priceText` is null, restore doesn't dismiss the
-  sheet when there's nothing to restore.
+  sheet when there's nothing to restore. Since M8, both this and
+  `MethodPickerScreenTest` inject `PurchaseController(UnavailablePurchases())`
+  explicitly via each screen's `purchases` override param, rather than
+  relying on `CoffeeGramsApplication`'s own default — which is the real
+  `LivePurchases`/`BillingClient` adapter from M8 onward, and would
+  otherwise mean these tests silently attempt a live billing connection.
 - `GuidedBrewScreenTest` (4), `EspressoShotScreenTest` (4),
   `ColdBrewScreenTest` (2) *(PR2)* — timer/step rendering and the "Save to
   Log" button's presence; the actual Room write isn't exercised from these

@@ -7,9 +7,11 @@
       would undermine the "no data collected" Data safety declaration.
 
       Permissions added in later milestones:
-        M8 — com.android.vending.BILLING for the Pro unlock
         M9 — FOREGROUND_SERVICE for guided-brew timer continuity
     -->
+
+    <!-- The Pro unlock, backed by Play Billing (M8). -->
+    <uses-permission android:name="com.android.vending.BILLING" />
 
     <!--
       Runtime permission (API 33+) for the cold-brew / French-press
