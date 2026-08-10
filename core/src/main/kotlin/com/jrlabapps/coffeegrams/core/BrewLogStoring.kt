@@ -19,6 +19,9 @@ interface BrewLogStoring {
     /** All saved brews, newest first. */
     suspend fun entries(): List<BrewLogEntry>
 
+    /** A single saved brew by [id], or `null` if it no longer exists — avoids an [entries] scan for detail screens. */
+    suspend fun entry(id: UUID): BrewLogEntry?
+
     suspend fun delete(id: UUID)
     suspend fun setRating(rating: Int?, id: UUID)
     suspend fun setNotes(notes: String?, id: UUID)

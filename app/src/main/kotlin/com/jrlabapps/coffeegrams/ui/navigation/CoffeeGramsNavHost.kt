@@ -1,6 +1,7 @@
 package com.jrlabapps.coffeegrams.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -74,10 +75,15 @@ fun CoffeeGramsNavHost() {
         }
         composable<LogDetailRoute> { backStackEntry: NavBackStackEntry ->
             val route: LogDetailRoute = backStackEntry.toRoute()
-            LogDetailScreen(
-                entryId = UUID.fromString(route.entryId),
-                onDeleted = { navController.popBackStack() },
-            )
+            val entryId = runCatching { UUID.fromString(route.entryId) }.getOrNull()
+            if (entryId == null) {
+                LaunchedEffect(Unit) { navController.popBackStack() }
+            } else {
+                LogDetailScreen(
+                    entryId = entryId,
+                    onDeleted = { navController.popBackStack() },
+                )
+            }
         }
     }
 }

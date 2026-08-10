@@ -12,6 +12,8 @@ class RoomBrewLogStore(private val dao: BrewLogDao) : BrewLogStoring {
 
     override suspend fun entries(): List<BrewLogEntry> = dao.getAll().map { it.toEntry() }
 
+    override suspend fun entry(id: UUID): BrewLogEntry? = dao.getById(id)?.toEntry()
+
     override suspend fun delete(id: UUID) {
         dao.deleteById(id)
     }

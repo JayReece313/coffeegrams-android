@@ -26,7 +26,7 @@ class LogDetailViewModel(private val entryId: UUID, private val store: BrewLogSt
     }
 
     private fun refresh() {
-        viewModelScope.launch { _entry.value = store.entries().firstOrNull { it.id == entryId } }
+        viewModelScope.launch { _entry.value = store.entry(entryId) }
     }
 
     /** 0 clears the rating back to unrated, matching [com.jrlabapps.coffeegrams.ui.log.StarRating]'s tap-to-clear behavior. */

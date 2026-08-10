@@ -30,6 +30,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -52,7 +54,10 @@ import java.util.UUID
  * History of saved brews, newest first. Mirrors iOS's `LogView`, with one
  * structural difference: iOS reads reactively from a SwiftData `@Query`,
  * while [LogViewModel] reloads explicitly (see its doc comment) since
- * [BrewLogStoring] is a one-shot `suspend` port here, not a `Flow`.
+ * [BrewLogStoring] is a one-shot `suspend` port here, not a `Flow`. Also
+ * refreshes on `ON_RESUME`: popping back from [LogDetailScreen] resumes this
+ * same route's existing `ViewModel` rather than recreating it, so a rating,
+ * notes, or delete made there wouldn't otherwise show up here.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,6 +70,7 @@ fun LogScreen(
         factory = viewModelFactory { initializer { LogViewModel(store) } },
     )
     val entries by viewModel.entries.collectAsStateWithLifecycle()
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refresh() }
 
     Scaffold(
         modifier = modifier,

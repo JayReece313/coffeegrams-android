@@ -64,6 +64,21 @@ class InMemoryBrewLogStoreTest {
     }
 
     @Test
+    fun `entry returns the matching saved entry by id`() = runTest {
+        val store = InMemoryBrewLogStore()
+        val saved = entry()
+        store.add(saved)
+        assertEquals(saved, store.entry(saved.id))
+    }
+
+    @Test
+    fun `entry returns null for a nonexistent id`() = runTest {
+        val store = InMemoryBrewLogStore()
+        store.add(entry())
+        assertNull(store.entry(UUID.randomUUID()))
+    }
+
+    @Test
     fun `delete removes the entry`() = runTest {
         val store = InMemoryBrewLogStore()
         val saved = entry()

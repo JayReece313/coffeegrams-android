@@ -62,6 +62,22 @@ class LogViewModelTest {
     }
 
     @Test
+    fun `refresh picks up a mutation made outside this view model`() = runTest {
+        // Simulates LogDetailViewModel mutating the same store (rating,
+        // notes, delete) after LogScreen's own ViewModel was created — the
+        // scenario that motivated an ON_RESUME refresh() call in LogScreen.
+        val store = InMemoryBrewLogStore()
+        val saved = entry()
+        store.add(saved)
+        val vm = LogViewModel(store)
+
+        store.setRating(5, saved.id)
+        vm.refresh()
+
+        assertEquals(5, vm.entries.value.single().rating)
+    }
+
+    @Test
     fun `delete removes the entry and refreshes the list`() = runTest {
         val store = InMemoryBrewLogStore()
         val saved = entry()
