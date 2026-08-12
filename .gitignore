@@ -16,5 +16,9 @@ local.properties
 *.keystore
 keystore.properties
 
+# Signed release build output (e.g. Android Studio's Generate Signed Bundle/APK)
+app/release/
+*.aab
+
 # macOS
 .DS_Store

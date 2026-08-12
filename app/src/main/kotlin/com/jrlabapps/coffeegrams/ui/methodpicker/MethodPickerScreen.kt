@@ -49,6 +49,7 @@ import com.jrlabapps.coffeegrams.design.subtitle
 import com.jrlabapps.coffeegrams.ui.currentApplication
 import com.jrlabapps.coffeegrams.ui.paywall.PaywallScreen
 import com.jrlabapps.coffeegrams.ui.theme.Spacing
+import com.jrlabapps.coffeegrams.viewmodel.PurchaseController
 
 /**
  * The app's navigation root: every [BrewMethod], with a Pro gate on the
@@ -58,8 +59,12 @@ import com.jrlabapps.coffeegrams.ui.theme.Spacing
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MethodPickerScreen(onMethodSelected: (BrewMethod) -> Unit, onViewLog: () -> Unit = {}, modifier: Modifier = Modifier) {
-    val purchases = currentApplication().purchaseController
+fun MethodPickerScreen(
+    onMethodSelected: (BrewMethod) -> Unit,
+    onViewLog: () -> Unit = {},
+    modifier: Modifier = Modifier,
+    purchases: PurchaseController = currentApplication().purchaseController,
+) {
     val isPremiumUnlocked by purchases.isPremiumUnlocked.collectAsStateWithLifecycle()
     var showPaywall by remember { mutableStateOf(false) }
     val viewLogDescription = stringResource(R.string.method_picker_view_log)
@@ -107,7 +112,7 @@ fun MethodPickerScreen(onMethodSelected: (BrewMethod) -> Unit, onViewLog: () -> 
 
     if (showPaywall) {
         ModalBottomSheet(onDismissRequest = { showPaywall = false }) {
-            PaywallScreen(onDismiss = { showPaywall = false })
+            PaywallScreen(onDismiss = { showPaywall = false }, purchases = purchases)
         }
     }
 }

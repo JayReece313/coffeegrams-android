@@ -24,4 +24,20 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    /**
+     * [LivePurchases] needs a foreground `Activity` to launch the Play
+     * billing flow. Attaching only while this Activity is started (not for
+     * the whole process lifetime) means a destroyed instance — e.g. across
+     * a configuration change — is never held onto.
+     */
+    override fun onStart() {
+        super.onStart()
+        (application as CoffeeGramsApplication).livePurchases.attach(this)
+    }
+
+    override fun onStop() {
+        (application as CoffeeGramsApplication).livePurchases.detach()
+        super.onStop()
+    }
 }

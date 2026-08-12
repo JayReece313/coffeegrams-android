@@ -23,6 +23,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jrlabapps.coffeegrams.R
 import com.jrlabapps.coffeegrams.ui.currentApplication
 import com.jrlabapps.coffeegrams.ui.theme.Spacing
+import com.jrlabapps.coffeegrams.viewmodel.PurchaseController
 import kotlinx.coroutines.launch
 
 /**
@@ -33,8 +34,11 @@ import kotlinx.coroutines.launch
  * flips true, from any source (a successful purchase here, or restore).
  */
 @Composable
-fun PaywallScreen(onDismiss: () -> Unit, modifier: Modifier = Modifier) {
-    val purchases = currentApplication().purchaseController
+fun PaywallScreen(
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+    purchases: PurchaseController = currentApplication().purchaseController,
+) {
     val isPremiumUnlocked by purchases.isPremiumUnlocked.collectAsStateWithLifecycle()
     val priceText by purchases.priceText.collectAsStateWithLifecycle()
     val isWorking by purchases.isWorking.collectAsStateWithLifecycle()

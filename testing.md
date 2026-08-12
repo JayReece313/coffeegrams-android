@@ -112,6 +112,15 @@ mirrors the iOS sibling's own precedent of never unit-testing
 notification *delivery* is verified manually on a device/emulator, the same
 way Play Billing and Doze are scoped below.
 
+**`LivePurchases` (M8), landed:** the same live-adapter-vs-pure-function
+split applies. `classifyPurchaseResponse` — the `BillingResponseCode`/
+`Purchase.PurchaseState` → `PurchaseOutcome` mapping — is pulled out as a
+function of plain `Int`s and covered by 6 cases in `LivePurchasesTest`. The
+rest of `LivePurchases` (the actual `BillingClient` connection, purchase
+flow, and acknowledgement calls) is exactly the "cannot be automated" case
+described below: it needs a real Play Store connection that neither a unit
+test nor the emulator can provide.
+
 **ViewModels (M6), landed:** 39 cases across 7 files, conformance-matched to
 the iOS sibling's ViewModel test suites (same inputs, same expected values).
 `CalculatorViewModelTest` (9) + `BrewPresetTest` (1) need no test double —
@@ -175,7 +184,12 @@ across 8 files, using `androidx.compose.ui.test.junit4.v2.createComposeRule`
   presets render.
 - `PaywallScreenTest` (3) — all 4 benefits render, the buy button never
   fabricates a price when `priceText` is null, restore doesn't dismiss the
-  sheet when there's nothing to restore.
+  sheet when there's nothing to restore. Since M8, both this and
+  `MethodPickerScreenTest` inject `PurchaseController(UnavailablePurchases())`
+  explicitly via each screen's `purchases` override param, rather than
+  relying on `CoffeeGramsApplication`'s own default — which is the real
+  `LivePurchases`/`BillingClient` adapter from M8 onward, and would
+  otherwise mean these tests silently attempt a live billing connection.
 - `GuidedBrewScreenTest` (4), `EspressoShotScreenTest` (4),
   `ColdBrewScreenTest` (2) *(PR2)* — timer/step rendering and the "Save to
   Log" button's presence; the actual Room write isn't exercised from these
@@ -233,19 +247,91 @@ cost real money, so the manual pass is not optional.
 testing documentation requires Android-powered *hardware* with the current Play
 Store installed. Use **license testers** to make real-flow purchases that are
 charged nothing, against a debug build whose package name matches the Play
-Console app — this removes the publish loop, but not the device requirement.
+Console app.
 
-| # | Check | Passes when |
-|---|---|---|
-| 1 | Buy Pro as a license tester | Pro methods unlock **and** the purchase is acknowledged — verify in Play Console → Orders |
-| 2 | Uninstall → reinstall → Restore | Entitlement returns via `queryPurchasesAsync()` |
-| 3 | Decline the payment instrument | Entitlement is **not** granted |
-| 4 | Already-owned purchase attempt | Handled gracefully, no error state |
+**One-time upload required before Play Console allows creating the in-app
+product** (discovered during M8, 2026-08-11): Play Console's Monetize →
+Products → One-time products screen refuses to let you create a product
+at all until it has seen the `com.android.vending.BILLING` permission in at
+least one uploaded build — "Your app doesn't have any one-time products yet.
+To add one-time products, you need to add the BILLING permission to your
+APK." A signed release build uploaded once to the **Internal testing**
+track (fastest, no review) satisfies this — generate an upload keystore via
+Android Studio's Build → Generate Signed Bundle/APK, enroll in Play App
+Signing on first upload, then create the release.
+
+**Purchase testing needs the app installed *through* the Play Store from
+that testing track — a sideloaded `adb install`/`./gradlew
+:app:installDebug` build is not enough**, even though it has the same
+`BILLING` permission and package name. Play's sandbox (free purchases for
+license testers) only activates for a testing-track install. Each tester's
+Google account also has to individually open the track's opt-in link and
+accept becoming a tester — being added to the Testers list doesn't
+pre-accept it for them. Practical flow per tester account: sign into the
+Play Store app as that account on the device → open the Internal testing
+opt-in link in a browser → accept → tap through to install from Play Store
+(not adb).
+
+**License testing is at Play Console → Settings → License testing** — not
+under "Setup" or "Advanced settings" (both were dead ends chased during
+M8). This is a *different* list from the Internal testing track's own
+Testers list (Testing → Internal testing → Testers) — a tester account
+needs to be on **both**: the Testers list to install the app at all, the
+License testing list for purchases to be free rather than real charges.
+
+**Expect propagation delays at multiple points, and don't mistake them for
+misconfiguration.** "Item not found" / "could not be found" showed up
+during M8 for at least three different not-yet-propagated states: a
+newly-activated in-app product, a newly-added license tester (purchases
+went through as *real charges*, not free, until enough time passed), and a
+newly-accepted testing-track opt-in (couldn't download until later). None
+of these had a fixed, documented wait time in practice — waiting and
+retrying resolved all three. If a real charge happens because of this
+(it did, once, during M8), refund it via Play Console → **Order
+management** (search by order ID or tester email) — note that a refund
+does not necessarily revoke the entitlement, so a refunded purchase can
+still show as owned on the device afterward (which incidentally is a
+perfectly good way to exercise the restore-purchase code path without
+buying again — `LivePurchases.restore()` is a literal one-line delegation
+to `isPurchased()`, so proving entitlement persists after reinstall proves
+`restore()` too, whether it got there via the button or the automatic
+`PurchaseController.start()` check on launch).
+
+The "Countries/regions" tab under a release track only exists for
+**Production**, not testing tracks — don't go looking for it on Internal
+testing; there's nothing there to configure for testing purposes.
+
+| # | Check | Passes when | Verified |
+|---|---|---|---|
+| 1 | Buy Pro as a license tester | Pro methods unlock **and** the purchase is acknowledged — verify in Play Console → Orders | ✅ live device, 2026-08-12 |
+| 2 | Uninstall → reinstall → Restore | Entitlement returns via `queryPurchasesAsync()` | ✅ live device, 2026-08-12 (see note below) |
+| 3 | Decline the payment instrument | Entitlement is **not** granted | Unit test + code review only (see note below) |
+| 4 | Already-owned purchase attempt | Handled gracefully, no error state | Unit test + code review only (see note below) |
 
 > ⚠️ **Acknowledgement is mandatory on Play, unlike StoreKit's `finish()`.** An
 > unacknowledged purchase is **auto-refunded** — 3 days in production, minutes for
 > test purchases. Getting this wrong silently refunds paying customers. Never ship
 > a billing change without re-running check 1.
+
+**Why checks 3 and 4 stopped at unit-test + review coverage rather than a live
+repro (M8, 2026-08-12):** two accidental *real* charges happened during M8's
+device testing (both from the license-tester propagation-delay gotcha above,
+refunded via Order management), and both refunds left the purchase still
+owned — Order management's **"Remove entitlement"** checkbox only appears on
+the *original* refund action, not retroactively once a refund has already
+processed (confirmed by trying it; there's a whole Google Play Developer
+Community thread of people hitting this same "forgot to check it" trap).
+With both tester accounts durably showing Pro as owned and no way to reset
+either, live-repro'ing check 3 (decline) or 4 (already-owned) would have
+needed a third Google account through the entire opt-in + propagation cycle
+again, for two of the lower-risk paths. Both are covered instead by
+`LivePurchasesTest`'s `classifyPurchaseResponse` cases
+(`USER_CANCELED`/`ITEM_ALREADY_OWNED`) and `PurchaseControllerTest`'s
+"a cancelled purchase leaves it locked" (M6) — decline/cancel and
+already-owned are also the most heavily-exercised, best-understood outcomes
+in the Play Billing library generally, unlike acknowledgement (check 1) and
+entitlement persistence (check 2), which were the two paths that actually
+carried real risk and did get proven on hardware.
 
 ### Timer continuity and notifications (M9)
 

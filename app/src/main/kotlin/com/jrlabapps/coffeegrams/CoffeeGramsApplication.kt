@@ -6,7 +6,7 @@ import com.jrlabapps.coffeegrams.data.RoomBrewLogStore
 import com.jrlabapps.coffeegrams.platform.LiveHaptics
 import com.jrlabapps.coffeegrams.platform.LiveMonotonicClock
 import com.jrlabapps.coffeegrams.platform.LiveNotificationScheduler
-import com.jrlabapps.coffeegrams.platform.UnavailablePurchases
+import com.jrlabapps.coffeegrams.platform.LivePurchases
 import com.jrlabapps.coffeegrams.viewmodel.PurchaseController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -34,13 +34,20 @@ class CoffeeGramsApplication : Application() {
     val notificationScheduler by lazy { LiveNotificationScheduler(this) }
 
     /**
-     * Backed by [UnavailablePurchases] until M8 wires up the real Play
-     * `BillingClient` adapter — Pro reads as locked everywhere until then.
+     * Exposed as the concrete type (not just [com.jrlabapps.coffeegrams.core.Purchases])
+     * so [MainActivity] can reach [LivePurchases.attach]/[LivePurchases.detach] —
+     * `launchBillingFlow` needs a foreground `Activity`, which the
+     * provider-agnostic `PurchaseController` deliberately has no reason to
+     * know about.
+     */
+    val livePurchases by lazy { LivePurchases(this) }
+
+    /**
      * `PurchaseController` itself is not a `ViewModel`: it's meant for a
      * single instance shared across every screen, matching iOS's one
      * environment-injected instance.
      */
-    val purchaseController by lazy { PurchaseController(UnavailablePurchases()) }
+    val purchaseController by lazy { PurchaseController(livePurchases) }
 
     override fun onCreate() {
         super.onCreate()

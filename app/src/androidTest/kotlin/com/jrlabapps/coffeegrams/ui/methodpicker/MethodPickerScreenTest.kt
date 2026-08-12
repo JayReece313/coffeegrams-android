@@ -6,6 +6,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.jrlabapps.coffeegrams.core.BrewMethod
+import com.jrlabapps.coffeegrams.platform.UnavailablePurchases
+import com.jrlabapps.coffeegrams.viewmodel.PurchaseController
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -15,19 +17,24 @@ import org.junit.runner.RunWith
 
 /**
  * Exercises the Pro gate: an unlocked method navigates, a locked one opens
- * the paywall instead. `UnavailablePurchases` (the app's placeholder
- * adapter until M8) means every non-free method reads as locked here.
+ * the paywall instead. Injects a fresh [PurchaseController] over
+ * [UnavailablePurchases] explicitly — rather than relying on
+ * `CoffeeGramsApplication`'s own default, which is the real Play Billing
+ * adapter from M8 onward — so every non-free method reads as locked here,
+ * deterministically, with no live billing connection involved.
  */
 @RunWith(AndroidJUnit4::class)
 class MethodPickerScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
+    private fun lockedPurchases() = PurchaseController(UnavailablePurchases())
+
     @Test
     fun tappingAnUnlockedMethodNavigates() {
         var selected: BrewMethod? = null
         composeTestRule.setContent {
-            MethodPickerScreen(onMethodSelected = { selected = it })
+            MethodPickerScreen(onMethodSelected = { selected = it }, purchases = lockedPurchases())
         }
 
         composeTestRule.onNodeWithContentDescription("French Press").performClick()
@@ -39,7 +46,7 @@ class MethodPickerScreenTest {
     fun tappingALockedMethodOpensThePaywallInstead() {
         var selected: BrewMethod? = null
         composeTestRule.setContent {
-            MethodPickerScreen(onMethodSelected = { selected = it })
+            MethodPickerScreen(onMethodSelected = { selected = it }, purchases = lockedPurchases())
         }
 
         composeTestRule.onNodeWithContentDescription("V60, Pro, locked").performClick()
@@ -51,7 +58,7 @@ class MethodPickerScreenTest {
     @Test
     fun unlockProToolbarActionOpensThePaywall() {
         composeTestRule.setContent {
-            MethodPickerScreen(onMethodSelected = {})
+            MethodPickerScreen(onMethodSelected = {}, purchases = lockedPurchases())
         }
 
         composeTestRule.onNodeWithText("Unlock Pro").performClick()
@@ -63,7 +70,7 @@ class MethodPickerScreenTest {
     fun brewLogToolbarActionNavigatesToTheLog() {
         var viewedLog = false
         composeTestRule.setContent {
-            MethodPickerScreen(onMethodSelected = {}, onViewLog = { viewedLog = true })
+            MethodPickerScreen(onMethodSelected = {}, onViewLog = { viewedLog = true }, purchases = lockedPurchases())
         }
 
         composeTestRule.onNodeWithContentDescription("Brew log").performClick()
