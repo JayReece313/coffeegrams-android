@@ -2,6 +2,7 @@ package com.jrlabapps.coffeegrams.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jrlabapps.coffeegrams.core.BrewSessionNotifier
 import com.jrlabapps.coffeegrams.core.BrewStep
 import com.jrlabapps.coffeegrams.core.BrewTimeline
 import com.jrlabapps.coffeegrams.core.BrewTimerEngine
@@ -9,6 +10,7 @@ import com.jrlabapps.coffeegrams.core.BrewTimerEvent
 import com.jrlabapps.coffeegrams.core.BrewTimerPhase
 import com.jrlabapps.coffeegrams.core.Haptics
 import com.jrlabapps.coffeegrams.core.MonotonicClock
+import com.jrlabapps.coffeegrams.design.TimeFormat
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,11 +35,22 @@ import kotlin.math.floor
  * brew is meant to survive a configuration change. [tick] itself stays
  * exactly as passive and pure as iOS's `tickOnce()` — only *who calls it*
  * moved.
+ *
+ * [sessionNotifier] (M9) exists for a different survival problem: rotation
+ * is covered by [viewModelScope] outliving it, but nothing before M9 stopped
+ * Android from killing the whole *process* while backgrounded, which would
+ * take [viewModelScope] — and the brew — with it. The foreground service it
+ * drives is what keeps the process alive; the actual catch-up on resume
+ * needs no new logic here, since [tick] already computes its delta from
+ * [MonotonicClock.now] (`elapsedRealtime`-backed, keeps advancing through
+ * Doze) and [BrewTimerEngine.advance] was built to fast-forward by exactly
+ * that delta.
  */
 class GuidedBrewViewModel(
     val timeline: BrewTimeline,
     private val clock: MonotonicClock,
     private val haptics: Haptics,
+    private val sessionNotifier: BrewSessionNotifier,
 ) : ViewModel() {
 
     private val engine = BrewTimerEngine(timeline)
@@ -123,6 +136,10 @@ class GuidedBrewViewModel(
         if (_phase.value != BrewTimerPhase.IDLE) return
         engine.start()
         lastTickTime = clock.now
+        // Reads engine directly, not the not-yet-synced StateFlows below —
+        // the notifier's start() must fire before syncFromEngine()'s own
+        // update() call, so this can't wait for that sync to happen first.
+        sessionNotifier.start(timeline.method.displayName, notificationMessage())
         syncFromEngine()
     }
 
@@ -148,6 +165,18 @@ class GuidedBrewViewModel(
     fun finish() {
         engine.finish()
         syncFromEngine()
+        sessionNotifier.stop()
+    }
+
+    /**
+     * Defensive stop, covering paths [finish] doesn't: the user backing out
+     * of the screen mid-brew (leave-confirmation dialog, then navigation)
+     * clears this ViewModel without ever calling [finish]. Safe to call
+     * even when no session was ever started — [BrewSessionNotifier.stop]
+     * is a no-op in that case.
+     */
+    override fun onCleared() {
+        sessionNotifier.stop()
     }
 
     /** The action behind the step's own button — ends the brew on the final step, otherwise just advances. */
@@ -205,6 +234,24 @@ class GuidedBrewViewModel(
         _totalElapsedSeconds.value = floor(engine.totalWallElapsed).toInt()
         _isOnFinalStep.value = engine.isOnFinalStep
         updateTicker()
+        if (engine.isActive) sessionNotifier.update(timeline.method.displayName, notificationMessage())
+    }
+
+    /**
+     * "Step 2: Bloom — 0:12" while counting down, "Step 4: Draw down —
+     * +0:07" while overrunning. Reads [engine] directly rather than the
+     * `_stateFlows` above — [start] needs this before [syncFromEngine] has
+     * populated them for the first time.
+     */
+    private fun notificationMessage(): String {
+        val step = engine.currentStep ?: return ""
+        val overrun = engine.overrunInStep
+        val time = if (overrun != null) {
+            "+${TimeFormat.clock(floor(overrun).toInt())}"
+        } else {
+            TimeFormat.clock(ceil(engine.remainingInStep ?: 0.0).toInt())
+        }
+        return "Step ${engine.currentStepIndex + 1}: ${step.title} — $time"
     }
 
     /**

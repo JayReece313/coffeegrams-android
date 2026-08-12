@@ -3,6 +3,7 @@ package com.jrlabapps.coffeegrams
 import android.app.Application
 import com.jrlabapps.coffeegrams.data.BrewLogDatabase
 import com.jrlabapps.coffeegrams.data.RoomBrewLogStore
+import com.jrlabapps.coffeegrams.platform.LiveBrewSessionNotifier
 import com.jrlabapps.coffeegrams.platform.LiveHaptics
 import com.jrlabapps.coffeegrams.platform.LiveMonotonicClock
 import com.jrlabapps.coffeegrams.platform.LiveNotificationScheduler
@@ -32,6 +33,9 @@ class CoffeeGramsApplication : Application() {
     val clock by lazy { LiveMonotonicClock() }
     val haptics by lazy { LiveHaptics(this) }
     val notificationScheduler by lazy { LiveNotificationScheduler(this) }
+
+    /** The ongoing "brew in progress" notification/foreground service (M9). */
+    val brewSessionNotifier by lazy { LiveBrewSessionNotifier(this) }
 
     /**
      * Exposed as the concrete type (not just [com.jrlabapps.coffeegrams.core.Purchases])

@@ -1,8 +1,10 @@
 package com.jrlabapps.coffeegrams.viewmodel
 
+import androidx.lifecycle.ViewModelStore
 import com.jrlabapps.coffeegrams.core.BrewMethodProfile
 import com.jrlabapps.coffeegrams.core.BrewTimelineBuilder
 import com.jrlabapps.coffeegrams.platform.FakeAdvancingClock
+import com.jrlabapps.coffeegrams.platform.RecordingBrewSessionNotifier
 import com.jrlabapps.coffeegrams.platform.RecordingHaptics
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -14,6 +16,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Conformance-matched to iOS's `GuidedBrewViewModelTests` — same fake-clock
@@ -40,13 +43,16 @@ class GuidedBrewViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun makeVM(clock: FakeAdvancingClock): GuidedBrewViewModel {
+    private fun makeVM(
+        clock: FakeAdvancingClock,
+        sessionNotifier: RecordingBrewSessionNotifier = RecordingBrewSessionNotifier(),
+    ): GuidedBrewViewModel {
         val timeline = BrewTimelineBuilder.buildPulsePourTimeline(
             profile = BrewMethodProfile.v60,
             doseGrams = 18.0,
             ratio = 16.0,
         )
-        return GuidedBrewViewModel(timeline, clock, RecordingHaptics())
+        return GuidedBrewViewModel(timeline, clock, RecordingHaptics(), sessionNotifier)
     }
 
     /** Run the brew to its drawdown — 135s covers bloom + pour 1 + pour 2. */
@@ -271,5 +277,57 @@ class GuidedBrewViewModelTest {
         vm.reset()
         assertEquals(true, vm.isIdle)
         assertEquals(0, vm.currentStepIndex.value)
+    }
+
+    @Test
+    fun `starting a brew starts the session notifier`() {
+        val notifier = RecordingBrewSessionNotifier()
+        val vm = makeVM(FakeAdvancingClock(), notifier)
+        vm.start()
+        assertEquals(1, notifier.startCount)
+        assertTrue(notifier.events.first() is RecordingBrewSessionNotifier.Event.Start)
+    }
+
+    @Test
+    fun `finish stops the session notifier`() {
+        val clock = FakeAdvancingClock()
+        val notifier = RecordingBrewSessionNotifier()
+        val vm = makeVM(clock, notifier)
+        vm.start()
+        clock.advance(20.0)
+        vm.tick()
+        vm.finish()
+        assertEquals(1, notifier.stopCount)
+    }
+
+    @Test
+    fun `clearing the view model stops the session notifier even without finish`() {
+        // Covers the user backing out of the screen mid-brew: the ViewModel
+        // is cleared without finish() ever running.
+        val clock = FakeAdvancingClock()
+        val notifier = RecordingBrewSessionNotifier()
+        val vm = makeVM(clock, notifier)
+        vm.start()
+        clock.advance(20.0)
+        vm.tick()
+
+        val store = ViewModelStore()
+        store.put("guidedBrew", vm)
+        store.clear() // triggers onCleared(), same as real navigation away from the screen
+
+        assertEquals(1, notifier.stopCount)
+    }
+
+    @Test
+    fun `ticking while active updates the session notifier`() {
+        val clock = FakeAdvancingClock()
+        val notifier = RecordingBrewSessionNotifier()
+        val vm = makeVM(clock, notifier)
+        vm.start()
+
+        clock.advance(20.0)
+        vm.tick()
+
+        assertTrue(notifier.events.any { it is RecordingBrewSessionNotifier.Event.Update })
     }
 }

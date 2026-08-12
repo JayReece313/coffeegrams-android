@@ -5,9 +5,6 @@
       No INTERNET permission, by design. CoffeeGrams makes no network calls
       outside Play Billing, which does not require one. Adding INTERNET here
       would undermine the "no data collected" Data safety declaration.
-
-      Permissions added in later milestones:
-        M9 — FOREGROUND_SERVICE for guided-brew timer continuity
     -->
 
     <!-- The Pro unlock, backed by Play Billing (M8). -->
@@ -24,6 +21,16 @@
 
     <!-- Normal (not runtime) permission — required for LiveHaptics's Vibrator calls. -->
     <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!--
+      M9 — keeps the process alive (and shows the ongoing notification) while
+      a guided brew is running, so Doze/background OOM-kill don't lose it.
+      FOREGROUND_SERVICE_SPECIAL_USE is required in addition to the general
+      permission as of API 34 — each declared foreground service type needs
+      its own matching permission, or startForeground() throws.
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <application
         android:name=".CoffeeGramsApplication"
@@ -46,6 +53,24 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!--
+          M9 — declares the specialUse type; startForeground() must hold the
+          matching FOREGROUND_SERVICE_SPECIAL_USE permission above.
+          android:foregroundServiceType is what the OS enforces at runtime;
+          PROPERTY_SPECIAL_USE_FGS_SUBTYPE's value is the justification string
+          Play reviews at submission (M11/M12) — a matching declaration also
+          needs to be added on the app's "App content" page in Play Console
+          before then, see testing.md.
+        -->
+        <service
+            android:name=".platform.BrewTimerForegroundService"
+            android:foregroundServiceType="specialUse"
+            android:exported="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Shows the current step and elapsed time while the user is actively guided through brewing a cup of coffee, and keeps the timer running accurately if the app is backgrounded mid-brew." />
+        </service>
     </application>
 
 </manifest>

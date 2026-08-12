@@ -4,9 +4,9 @@ Two layers: a **pure Kotlin logic module** under a **thin Compose app**. Every
 side effect crosses a port. This mirrors the iOS app deliberately — the shared
 shape is what makes the two codebases maintainable in parallel.
 
-> **Status (2026-08-10):** M2–M7 complete, M8 in progress — code and unit
-> tests done, Play Console setup and physical-device verification pending.
-> `:core` is fully ported: all 12 Models/Logic files and the
+> **Status (2026-08-12):** M2–M8 complete, M9 in progress — code and unit/
+> instrumented tests done, physical-device Doze/backgrounding verification
+> pending. `:core` is fully ported: all 12 Models/Logic files and the
 > `MonotonicClock` + `BrewLogStoring` ports, plus all 49 conformance tests
 > (`./gradlew :core:test`, headless, warnings-as-errors). The Compose theme
 > (`ui/theme/`) carries the real palette, type scale, and (new in M7) a
@@ -43,18 +43,24 @@ shape is what makes the two codebases maintainable in parallel.
 > observing a `Flow` — see its doc comment — since `BrewLogStoring` is a
 > one-shot `suspend` port, matching the same reload-on-entry shape the nav
 > graph already gives every route. **M7 shipped** (PR #10, merged
-> 2026-08-10). **M8 (in progress)** replaces the `UnavailablePurchases`
-> placeholder with `platform/LivePurchases.kt`, the real `BillingClient`
-> adapter — a straight swap behind the `Purchases` port, no change to
-> `PurchaseController` or its callers. `MethodPickerScreen`/`PaywallScreen`
-> gained an optional `purchases: PurchaseController` override param (the
-> same shape `LogScreen`'s `store` param already used) so their instrumented
-> tests can keep injecting `UnavailablePurchases` explicitly rather than
-> depending on `CoffeeGramsApplication`'s now-live default. Code and unit
-> tests are verified; the physical-device billing checklist in `testing.md`
-> and the Play Console product/license-tester setup are not — those can only
-> happen outside this session. This document is updated as each
-> milestone/PR lands.
+> 2026-08-10). **M8 shipped** (PR #11, merged 2026-08-12): replaced the
+> `UnavailablePurchases` placeholder with `platform/LivePurchases.kt`, the
+> real `BillingClient` adapter. **M9 (in progress)** adds
+> `core/BrewSessionNotifier.kt`, a new port for the ongoing "brew in
+> progress" notification, backed by `platform/LiveBrewSessionNotifier.kt` +
+> a thin `platform/BrewTimerForegroundService.kt`. Its job is narrower than
+> it might sound: `GuidedBrewViewModel`'s tick loop and
+> `BrewTimerEngine.advance`'s elapsedRealtime-based catch-up already handle
+> a brief backgrounding the process survives (see the ports table below for
+> why); what was missing, and what M9 actually fixes, is Android killing the
+> *process* outright while a brew is backgrounded — a live foreground
+> service is what makes that rare. Scoped to guided brew only (V60, Chemex,
+> French Press, AeroPress), not espresso shots, which run 20-40 seconds and
+> don't carry the same backgrounding risk — see `PLAN.md`'s M9 row and the
+> reasoning in `GuidedBrewViewModel`'s doc comment. Code and unit/
+> instrumented tests are verified; the physical-device Doze/backgrounding
+> checklist in `testing.md` is not — that can only happen outside this
+> session. This document is updated as each milestone/PR lands.
 
 ---
 
@@ -65,7 +71,7 @@ graph TD
     subgraph app[":app — Android, Jetpack Compose"]
         UI["Compose screens — all done<br/>method picker · calculator · paywall (PR1)<br/>guided brew · espresso · cold brew (PR2)<br/>brew log · brew log detail (PR3)"]
         VM["ViewModels — done<br/>Calculator · GuidedBrew · EspressoShot · ColdBrew<br/>PurchaseController · Log · LogDetail"]
-        AD["Adapters<br/>SystemClock · Haptics · Notifications — done<br/>Room — done · Play Billing (LivePurchases) — done, needs device verification"]
+        AD["Adapters<br/>SystemClock · Haptics · Notifications — done<br/>Room · Play Billing (LivePurchases) — done<br/>BrewSessionNotifier (foreground service) — done, needs device verification"]
     end
 
     subgraph core[":core — pure Kotlin, no Android"]
@@ -107,6 +113,7 @@ emulator, and what made the iOS→Android port cheap in the first place.
 | `Haptics` — **built (M5)** | `LiveHaptics` (`Vibrator`/`VibratorManager`) | `RecordingHaptics` | M5 |
 | `Notifications` — **built (M5)** | `LiveNotificationScheduler` (channel + `WorkManager`) | `RecordingNotificationScheduler` | M5 |
 | `Purchases` — **ported (M6)**, live adapter **built (M8)** | `LivePurchases` (`BillingClient`) | `ScriptedPurchases`, `UnavailablePurchases` | M6 (port), M7 PR1 (placeholder), M8 (real adapter) |
+| `BrewSessionNotifier` — **built (M9)** | `LiveBrewSessionNotifier` + `BrewTimerForegroundService` | `RecordingBrewSessionNotifier` | M9 |
 
 The `Purchases` port landed at M6 alongside its first caller,
 `PurchaseController`, the same way `MonotonicClock`'s port landed at M2
@@ -131,6 +138,17 @@ Play — an unacknowledged purchase auto-refunds within days, see
 `testing.md`) happens defensively in three paths: after a fresh purchase,
 and on every `isPurchased()`/`restore()` call, so a killed process or a
 missed callback can never leave a purchase unacknowledged.
+
+`BrewSessionNotifier` is the odd one out in this table: every other port
+exists because `:core` needs a real capability (storage, haptics, a clock).
+This one exists purely so `:app`'s process has a reason for Android not to
+kill it — no `:core` timing logic depends on it, and `BrewTimerEngine`/
+`MonotonicClock` are unchanged by M9. `LiveBrewSessionNotifier.start()`
+launches `BrewTimerForegroundService` (which makes the actual
+`startForeground()` call, typed `specialUse` — no built-in Android category
+fits "an ongoing coffee brew"); `.update()` then talks to
+`NotificationManagerCompat` directly rather than round-tripping back
+through the service, since content updates don't need to.
 
 `DiagnosticsService` from iOS is **deliberately dropped** — it only wrote to
 `os.Logger` and has no Android counterpart worth building.
@@ -230,8 +248,8 @@ See [`testing.md`](testing.md) for how to run each suite.
 | `app/src/test/kotlin/.../data/` | `InMemoryBrewLogStore` test double + its own contract test, entity↔entry mapping test |
 | `app/src/androidTest/kotlin/.../data/` | `RoomBrewLogStoreTest` — the same contract, against real Room (needs a device/emulator) |
 | `app/schemas/` | Room's exported schema JSON (`exportSchema = true`) — the v1 baseline future migrations diff against |
-| `app/src/main/kotlin/.../platform/` | `LiveMonotonicClock`, `LiveHaptics`, `LiveNotificationScheduler`, `ReminderWorker`, `BrewReminder`, `UnavailablePurchases`, `LivePurchases` (`BillingClient` adapter, *M8*) |
-| `app/src/test/kotlin/.../platform/` | `FakeAdvancingClock`, `RecordingHaptics`, `RecordingNotificationScheduler` test doubles + their tests, plus JVM tests for `LiveNotificationScheduler.buildWorkRequest`, `ReminderWorker.contentFrom`, `BrewReminder`, `UnavailablePurchases`, and `LivePurchasesTest` (the `classifyPurchaseResponse` mapping only — see its own doc comment for why the rest of `LivePurchases` isn't unit-testable) |
+| `app/src/main/kotlin/.../platform/` | `LiveMonotonicClock`, `LiveHaptics`, `LiveNotificationScheduler`, `ReminderWorker`, `BrewReminder`, `UnavailablePurchases`, `LivePurchases` (`BillingClient` adapter, *M8*), `LiveBrewSessionNotifier`, `BrewTimerForegroundService` (*M9*) |
+| `app/src/test/kotlin/.../platform/` | `FakeAdvancingClock`, `RecordingHaptics`, `RecordingNotificationScheduler` test doubles + their tests, plus JVM tests for `LiveNotificationScheduler.buildWorkRequest`, `ReminderWorker.contentFrom`, `BrewReminder`, `UnavailablePurchases`, `LivePurchasesTest` (the `classifyPurchaseResponse` mapping only — see its own doc comment for why the rest of `LivePurchases` isn't unit-testable), and `RecordingBrewSessionNotifier` (*M9*) |
 | `app/src/main/kotlin/.../viewmodel/` | `CalculatorViewModel`, `BrewPreset`, `GuidedBrewViewModel`, `EspressoShotViewModel`, `ColdBrewViewModel`, `PurchaseController`, `LogViewModel`, `LogDetailViewModel` |
 | `app/src/test/kotlin/.../viewmodel/` | Their ported conformance tests, plus `ScriptedPurchases` (the `Purchases` test double) and the `LogViewModel`/`LogDetailViewModel` tests (against `InMemoryBrewLogStore`) |
 | `app/src/main/res/values/strings.xml` | UI strings, named `<screen>_<element>` (e.g. `method_picker_unlock_pro`, `calculator_start_espresso`) — the package each screen lives under in `ui/` |
