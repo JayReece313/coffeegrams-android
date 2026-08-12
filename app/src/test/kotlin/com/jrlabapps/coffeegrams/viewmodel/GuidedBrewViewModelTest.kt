@@ -330,4 +330,27 @@ class GuidedBrewViewModelTest {
 
         assertTrue(notifier.events.any { it is RecordingBrewSessionNotifier.Event.Update })
     }
+
+    @Test
+    fun `ticking within the same displayed second does not re-post the notification`() {
+        // Guards against notify()-ing 10x/second: the 100ms tick loop
+        // recomputes far more often than the second-granularity display
+        // text actually changes.
+        val clock = FakeAdvancingClock()
+        val notifier = RecordingBrewSessionNotifier()
+        val vm = makeVM(clock, notifier)
+        vm.start()
+        val updateCount = { notifier.events.count { it is RecordingBrewSessionNotifier.Event.Update } }
+        assertEquals(0, updateCount()) // start() already posted the initial content itself
+
+        clock.advance(0.3)
+        vm.tick()
+        clock.advance(0.3)
+        vm.tick()
+        assertEquals(0, updateCount()) // still "0:45" -- ceil(45 - 0.6) rounds back up to 45
+
+        clock.advance(0.9) // crosses into the next displayed second ("0:44")
+        vm.tick()
+        assertEquals(1, updateCount())
+    }
 }

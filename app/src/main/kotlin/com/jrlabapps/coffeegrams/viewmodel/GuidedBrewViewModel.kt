@@ -83,6 +83,15 @@ class GuidedBrewViewModel(
 
     private var tickerJob: Job? = null
 
+    /**
+     * The last notification content actually posted — [syncFromEngine] only
+     * calls [sessionNotifier]'s `update` when this changes, since the
+     * 100ms tick loop recomputes it far more often than the second-granularity
+     * display text ever does, and `NotificationManager.notify()` on every
+     * tick is 10 avoidable calls a second for the whole brew.
+     */
+    private var lastNotifiedMessage: String? = null
+
     init {
         engine.onEvent = { event -> handle(event) }
         syncFromEngine()
@@ -139,7 +148,11 @@ class GuidedBrewViewModel(
         // Reads engine directly, not the not-yet-synced StateFlows below —
         // the notifier's start() must fire before syncFromEngine()'s own
         // update() call, so this can't wait for that sync to happen first.
-        sessionNotifier.start(timeline.method.displayName, notificationMessage())
+        // Recording it as already-notified here is what stops the very next
+        // syncFromEngine() call from immediately re-posting the same content.
+        val message = notificationMessage()
+        sessionNotifier.start(timeline.method.displayName, message)
+        lastNotifiedMessage = message
         syncFromEngine()
     }
 
@@ -234,7 +247,13 @@ class GuidedBrewViewModel(
         _totalElapsedSeconds.value = floor(engine.totalWallElapsed).toInt()
         _isOnFinalStep.value = engine.isOnFinalStep
         updateTicker()
-        if (engine.isActive) sessionNotifier.update(timeline.method.displayName, notificationMessage())
+        if (engine.isActive) {
+            val message = notificationMessage()
+            if (message != lastNotifiedMessage) {
+                sessionNotifier.update(timeline.method.displayName, message)
+                lastNotifiedMessage = message
+            }
+        }
     }
 
     /**

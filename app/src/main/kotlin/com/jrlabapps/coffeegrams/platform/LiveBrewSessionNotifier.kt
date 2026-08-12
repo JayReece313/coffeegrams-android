@@ -16,6 +16,9 @@ import com.jrlabapps.coffeegrams.core.BrewSessionNotifier
  * matching [LiveNotificationScheduler]'s pattern.
  */
 class LiveBrewSessionNotifier(private val context: Context) : BrewSessionNotifier {
+    /** Tracks whether [start] has run, so [update] can honor its documented no-op-before-[start] contract. */
+    private var started = false
+
     init {
         val channel = NotificationChannel(
             CHANNEL_ID,
@@ -31,6 +34,7 @@ class LiveBrewSessionNotifier(private val context: Context) : BrewSessionNotifie
     }
 
     override fun start(title: String, message: String) {
+        started = true
         val intent = Intent(context, BrewTimerForegroundService::class.java).apply {
             putExtra(BrewTimerForegroundService.EXTRA_TITLE, title)
             putExtra(BrewTimerForegroundService.EXTRA_MESSAGE, message)
@@ -39,12 +43,19 @@ class LiveBrewSessionNotifier(private val context: Context) : BrewSessionNotifie
     }
 
     override fun update(title: String, message: String) {
+        if (!started) return
         val notification = BrewTimerForegroundService.buildNotification(context, title, message)
         NotificationManagerCompat.from(context).notify(BrewTimerForegroundService.NOTIFICATION_ID, notification)
     }
 
     override fun stop() {
+        started = false
         context.stopService(Intent(context, BrewTimerForegroundService::class.java))
+        // Cancelled explicitly rather than relying solely on stopService()'s
+        // implicit cleanup — update() posts directly via NotificationManagerCompat,
+        // outside the service's own startForeground()/stopForeground() tracking,
+        // so a notification it posted needs its own explicit removal here too.
+        NotificationManagerCompat.from(context).cancel(BrewTimerForegroundService.NOTIFICATION_ID)
     }
 
     companion object {
