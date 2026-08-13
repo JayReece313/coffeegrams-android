@@ -121,6 +121,20 @@ flow, and acknowledgement calls) is exactly the "cannot be automated" case
 described below: it needs a real Play Store connection that neither a unit
 test nor the emulator can provide.
 
+**`BrewSessionNotifier` (M9), landed:** `GuidedBrewViewModelTest` gained 4
+cases against the new `RecordingBrewSessionNotifier` double — starting a
+brew calls the notifier's `start()`, `finish()` calls `stop()`, ticking
+while active calls `update()`, and (the one guarding against a real gap)
+clearing the `ViewModel` via a real `androidx.lifecycle.ViewModelStore`
+without ever calling `finish()` still calls `stop()` — covers the user
+backing out of the screen mid-brew, not just the happy-path end. What's
+*not* unit-tested: the actual `BillingClient`-style live surface here is
+`BrewTimerForegroundService`/`startForeground()` itself, which needs a real
+process and a real Android framework — same "cannot be automated without a
+device" category as `LivePurchases`, verified instead by
+`connectedAndroidTest` starting the real service without crashing, plus the
+physical-device Doze/backgrounding checklist below.
+
 **ViewModels (M6), landed:** 39 cases across 7 files, conformance-matched to
 the iOS sibling's ViewModel test suites (same inputs, same expected values).
 `CalculatorViewModelTest` (9) + `BrewPresetTest` (1) need no test double —
@@ -335,15 +349,34 @@ carried real risk and did get proven on hardware.
 
 ### Timer continuity and notifications (M9)
 
-| # | Check | Passes when |
-|---|---|---|
-| 5 | Start a V60 brew, lock the screen 3 min, unlock | Step and elapsed time are **correct**, not frozen and not reset |
-| 6 | Start a brew, swipe the app away | Behaviour is defined and the foreground-service notification is accurate |
-| 7 | Leave a brew running into Doze | Step transitions still land |
-| 8 | Rotate the device mid-brew | Timer survives configuration change |
-| 9 | Take an incoming call mid-brew | Timer survives |
-| 10 | Schedule a cold brew, wait 12–24 h | Notification arrives; **modest Doze drift is acceptable** and is not a bug |
-| 11 | Deny the notification permission | App remains fully usable |
+`platform/BrewTimerForegroundService.kt` + `platform/LiveBrewSessionNotifier.kt`
+(M9) exist so checks 5–9 pass at all — a backgrounded process with no
+foreground service is a plausible OOM-kill target, which would take the
+`GuidedBrewViewModel` tick loop (and the brew) with it. Scoped to guided
+brew only (V60, Chemex, French Press, AeroPress) — not espresso shots,
+which run 20-40 seconds and don't carry the same risk. Code + unit/
+instrumented tests are verified (see the M9 paragraph above); checks 5–9
+below need the physical device and have not been run yet.
+
+To force Doze on-demand for check 7, rather than waiting for the real
+thing: `adb shell dumpsys battery unplug` then
+`adb shell dumpsys deviceidle force-idle` (exit with
+`adb shell dumpsys deviceidle unforce`).
+
+**Forward dependency for M11/M12, not needed for M9 itself:** Play Console
+requires a matching foreground-service-type declaration on the app's "App
+content" page before submission, alongside the manifest's
+`PROPERTY_SPECIAL_USE_FGS_SUBTYPE` justification string that Play reviews.
+
+| # | Check | Passes when | Verified |
+|---|---|---|---|
+| 5 | Start a V60 brew, lock the screen 3 min, unlock | Step and elapsed time are **correct**, not frozen and not reset | Pending |
+| 6 | Start a brew, swipe the app away | Behaviour is defined and the foreground-service notification is accurate | Pending |
+| 7 | Leave a brew running into Doze | Step transitions still land | Pending |
+| 8 | Rotate the device mid-brew | Timer survives configuration change | Pending |
+| 9 | Take an incoming call mid-brew | Timer survives | Pending |
+| 10 | Schedule a cold brew, wait 12–24 h | Notification arrives; **modest Doze drift is acceptable** and is not a bug | Pending |
+| 11 | Deny the notification permission | App remains fully usable | Pending |
 
 ---
 

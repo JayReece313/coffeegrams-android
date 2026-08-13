@@ -70,7 +70,7 @@ fun GuidedBrewScreen(timeline: BrewTimeline, doseGrams: Double, ratio: Double, m
     val application = currentApplication()
     val viewModel: GuidedBrewViewModel = viewModel(
         factory = viewModelFactory {
-            initializer { GuidedBrewViewModel(timeline, application.clock, application.haptics) }
+            initializer { GuidedBrewViewModel(timeline, application.clock, application.haptics, application.brewSessionNotifier) }
         },
     )
 
