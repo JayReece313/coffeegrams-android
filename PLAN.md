@@ -166,6 +166,49 @@ Ships with the required docs from the start, not as afterthoughts:
 
 A **GitHub Projects board** under `JayReece313` mirrors the milestones below — every milestone and deliverable gets a card with **both a column and a one-line description**, moved to in-progress on start and done on completion.
 
+### How releases map between the two platforms
+
+Decided 2026-08-13, once iOS had shipped past this port's original baseline
+(1.1 live, 1.2 — iPad + rating prompt — in planning) while Android was still
+mid-port. Written down so a later session doesn't try to invent a lockstep
+versioning scheme neither platform needs.
+
+**Version numbers do not stay in sync across platforms.** iOS and Android are
+separate binaries in separate stores with separate review clocks — "Android
+1.2 ships alongside iOS 1.2" is coordination overhead with no user-facing
+payoff; nobody compares version numbers across the App Store and Play
+listings side by side.
+
+**What has to stay in sync is decisions, not release cadence.** The NO-ads
+call, the $4.99 one-time Pro price, the six brew methods, and the core
+brew-calculation/timer logic are the actual conformance spec — `:core` must
+keep matching `CoffeeGramsCore` exactly, per the porting standard in the root
+`CLAUDE.md`. Those aren't re-decided per platform or per release.
+
+**Port feature-by-feature when an iOS release ships, not release-by-release:**
+- **Core logic changes** (a new `BrewMethod`, a ratio-calc fix) → always port
+  mechanically into `:core`, same as the initial conformance-spec port.
+- **iOS-idiomatic features with a real Android equivalent** → port the
+  *intent*, not the API. Example: iOS 1.2's SwiftUI `requestReview` rating
+  prompt maps to Android's own **Play In-App Review API** — same product
+  goal, different platform call — and it lands in whatever Android version
+  is current when it's actually built, not "Android 1.2."
+- **Platform-specific presentation work** → no automatic obligation. iOS
+  1.2's iPad + `NavigationSplitView` layout pass doesn't map 1:1: Compose's
+  `WindowSizeClass`/adaptive layouts already cover more of that ground by
+  default, and Android's tablet share is smaller than iPad's role on iOS. If
+  a large-screen pass is ever worth doing on Android, it's its own
+  separately-scoped task, evaluated on its own merits — not something
+  triggered automatically by iOS shipping iPad support.
+
+**Concretely:** this port's own **1.0 targets parity with the iOS feature set
+the port started from** (~1.1 — method list, guided timers, brew log with
+planned/actual timing) — not iOS's in-flight 1.2/1.3 work. Once this ships,
+each subsequent iOS release becomes a set of individually-evaluated
+candidates for *this* repo's own roadmap (a `Releases/roadmap_future.md`
+equivalent, once one exists here) — referencing the iOS roadmap for shared
+*decisions*, never for version numbers.
+
 ---
 
 ## Milestones
