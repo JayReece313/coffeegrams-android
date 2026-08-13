@@ -182,8 +182,10 @@ listings side by side.
 **What has to stay in sync is decisions, not release cadence.** The NO-ads
 call, the $4.99 one-time Pro price, the six brew methods, and the core
 brew-calculation/timer logic are the actual conformance spec — `:core` must
-keep matching `CoffeeGramsCore` exactly, per the porting standard in the root
-`CLAUDE.md`. Those aren't re-decided per platform or per release.
+keep matching `CoffeeGramsCore` exactly, per the porting standard in
+`CLAUDE.md` at the `Apps/` level (this repo has no `CLAUDE.md` of its own —
+see *How to work in here* in `README.md`). Those aren't re-decided per
+platform or per release.
 
 **Port feature-by-feature when an iOS release ships, not release-by-release:**
 - **Core logic changes** (a new `BrewMethod`, a ratio-calc fix) → always port
