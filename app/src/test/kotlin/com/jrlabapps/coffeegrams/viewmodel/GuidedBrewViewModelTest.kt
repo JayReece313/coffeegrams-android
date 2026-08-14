@@ -6,6 +6,7 @@ import com.jrlabapps.coffeegrams.core.BrewTimelineBuilder
 import com.jrlabapps.coffeegrams.platform.FakeAdvancingClock
 import com.jrlabapps.coffeegrams.platform.RecordingBrewSessionNotifier
 import com.jrlabapps.coffeegrams.platform.RecordingHaptics
+import com.jrlabapps.coffeegrams.platform.RecordingNotificationScheduler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -46,13 +47,14 @@ class GuidedBrewViewModelTest {
     private fun makeVM(
         clock: FakeAdvancingClock,
         sessionNotifier: RecordingBrewSessionNotifier = RecordingBrewSessionNotifier(),
+        notifications: RecordingNotificationScheduler = RecordingNotificationScheduler(),
     ): GuidedBrewViewModel {
         val timeline = BrewTimelineBuilder.buildPulsePourTimeline(
             profile = BrewMethodProfile.v60,
             doseGrams = 18.0,
             ratio = 16.0,
         )
-        return GuidedBrewViewModel(timeline, clock, RecordingHaptics(), sessionNotifier)
+        return GuidedBrewViewModel(timeline, clock, RecordingHaptics(), sessionNotifier, notifications)
     }
 
     /** Run the brew to its drawdown — 135s covers bloom + pour 1 + pour 2. */
@@ -352,5 +354,25 @@ class GuidedBrewViewModelTest {
         clock.advance(0.9) // crosses into the next displayed second ("0:44")
         vm.tick()
         assertEquals(1, updateCount())
+    }
+
+    @Test
+    fun `canShowSessionNotification reflects the OS-reported capability`() {
+        val granted = makeVM(FakeAdvancingClock(), notifications = RecordingNotificationScheduler(authorized = true))
+        assertEquals(true, granted.canShowSessionNotification())
+
+        val denied = makeVM(FakeAdvancingClock(), notifications = RecordingNotificationScheduler(authorized = false))
+        assertEquals(false, denied.canShowSessionNotification())
+    }
+
+    @Test
+    fun `starting a brew does not wait on notification permission either way`() {
+        // Unlike ColdBrewViewModel.startSteep, GuidedBrewViewModel's timer
+        // doesn't depend on the permission result -- start() must succeed
+        // regardless of what the notifier reports.
+        val clock = FakeAdvancingClock()
+        val vm = makeVM(clock, notifications = RecordingNotificationScheduler(authorized = false))
+        vm.start()
+        assertEquals(true, vm.isRunning)
     }
 }

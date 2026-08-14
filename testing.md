@@ -354,9 +354,7 @@ carried real risk and did get proven on hardware.
 foreground service is a plausible OOM-kill target, which would take the
 `GuidedBrewViewModel` tick loop (and the brew) with it. Scoped to guided
 brew only (V60, Chemex, French Press, AeroPress) — not espresso shots,
-which run 20-40 seconds and don't carry the same risk. Code + unit/
-instrumented tests are verified (see the M9 paragraph above); checks 5–9
-below need the physical device and have not been run yet.
+which run 20-40 seconds and don't carry the same risk.
 
 To force Doze on-demand for check 7, rather than waiting for the real
 thing: `adb shell dumpsys battery unplug` then
@@ -368,15 +366,35 @@ requires a matching foreground-service-type declaration on the app's "App
 content" page before submission, alongside the manifest's
 `PROPERTY_SPECIAL_USE_FGS_SUBTYPE` justification string that Play reviews.
 
+**Real gap found and fixed during the device pass (2026-08-14): guided
+brew never requested `POST_NOTIFICATIONS`.** The existing runtime-permission
+request flow (M7) only triggers from the cold-brew "start steep" button. A
+guided brew started without ever touching cold brew first had no permission
+path at all — `LiveBrewSessionNotifier` still called `NotificationManagerCompat.notify()`
+correctly, but Samsung's OS silently suppressed display of it
+("`Suppressing notification from package ... by user request`" in logcat,
+confirmed via `adb shell dumpsys notification` showing `importance=NONE`
+at the app level even though the channel itself was correctly configured
+`IMPORTANCE_LOW`). Also observed a `FGS stop call ... has no types`
+warning seconds after the service started with the permission missing,
+suggesting Samsung may stop a foreground service early when it has no
+visible notification to justify staying alive — exactly the protection M9
+exists to provide. Fixed by giving `GuidedBrewViewModel` its own
+`NotificationScheduling` dependency (reusing the same port cold brew
+already uses) and requesting the permission from `GuidedBrewScreen`'s
+Start button, mirroring `ColdBrewScreen`'s existing pattern exactly — see
+`GuidedBrewViewModel`'s doc comment for why `start()` doesn't wait on the
+prompt's result the way cold brew's flow does.
+
 | # | Check | Passes when | Verified |
 |---|---|---|---|
-| 5 | Start a V60 brew, lock the screen 3 min, unlock | Step and elapsed time are **correct**, not frozen and not reset | Pending |
-| 6 | Start a brew, swipe the app away | Behaviour is defined and the foreground-service notification is accurate | Pending |
-| 7 | Leave a brew running into Doze | Step transitions still land | Pending |
-| 8 | Rotate the device mid-brew | Timer survives configuration change | Pending |
-| 9 | Take an incoming call mid-brew | Timer survives | Pending |
-| 10 | Schedule a cold brew, wait 12–24 h | Notification arrives; **modest Doze drift is acceptable** and is not a bug | Pending |
-| 11 | Deny the notification permission | App remains fully usable | Pending |
+| 5 | Start a V60 brew, lock the screen 3 min, unlock | Step and elapsed time are **correct**, not frozen and not reset | ✅ 2026-08-14 |
+| 6 | Start a brew, swipe the app away | Behaviour is defined and the foreground-service notification is accurate | ✅ 2026-08-14 (after the `POST_NOTIFICATIONS` fix above — see that note for what failed first) |
+| 7 | Leave a brew running into Doze | Step transitions still land | ✅ 2026-08-14, via `dumpsys deviceidle force-idle` |
+| 8 | Rotate the device mid-brew | Timer survives configuration change | ✅ 2026-08-14 |
+| 9 | Take an incoming call mid-brew | Timer survives | Covered by generalization from checks 5–8, not directly tested — the test device has no cellular radio. A call interrupts the app the same way backgrounding does; nothing about a call gets different process-lifecycle treatment on Android. |
+| 10 | Schedule a cold brew, wait 12–24 h | Notification arrives; **modest Doze drift is acceptable** and is not a bug | Pending — pre-existing M5 functionality, not new M9 work |
+| 11 | Deny the notification permission | App remains fully usable | ✅ observed directly, 2026-08-14 — checks 5 and the first attempt at check 6 both ran correctly (brew progressed, no crash) while `POST_NOTIFICATIONS` was still denied, before the fix above; only the notification's visibility was affected |
 
 ---
 

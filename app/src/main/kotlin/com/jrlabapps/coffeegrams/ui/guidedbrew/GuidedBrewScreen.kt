@@ -1,7 +1,10 @@
 package com.jrlabapps.coffeegrams.ui.guidedbrew
 
+import android.Manifest
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -70,9 +73,22 @@ fun GuidedBrewScreen(timeline: BrewTimeline, doseGrams: Double, ratio: Double, m
     val application = currentApplication()
     val viewModel: GuidedBrewViewModel = viewModel(
         factory = viewModelFactory {
-            initializer { GuidedBrewViewModel(timeline, application.clock, application.haptics, application.brewSessionNotifier) }
+            initializer {
+                GuidedBrewViewModel(
+                    timeline,
+                    application.clock,
+                    application.haptics,
+                    application.brewSessionNotifier,
+                    application.notificationScheduler,
+                )
+            }
         },
     )
+    // Doesn't gate start() on the result — see GuidedBrewViewModel's doc
+    // comment for why the timer itself doesn't need to wait on this.
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) {}
 
     val phase by viewModel.phase.collectAsStateWithLifecycle()
     val currentStepIndex by viewModel.currentStepIndex.collectAsStateWithLifecycle()
@@ -156,6 +172,12 @@ fun GuidedBrewScreen(timeline: BrewTimeline, doseGrams: Double, ratio: Double, m
                 phase = phase,
                 savedToLog = savedToLog,
                 isSaving = isSaving,
+                onStart = {
+                    if (!viewModel.canShowSessionNotification()) {
+                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                    viewModel.start()
+                },
                 onSave = {
                     isSaving = true
                     scope.launch {
@@ -276,6 +298,7 @@ private fun Controls(
     phase: BrewTimerPhase,
     savedToLog: Boolean,
     isSaving: Boolean,
+    onStart: () -> Unit,
     onSave: () -> Unit,
     onBrewAgain: () -> Unit,
 ) {
@@ -294,7 +317,7 @@ private fun Controls(
             }
         }
         BrewTimerPhase.IDLE -> {
-            Button(onClick = { viewModel.start() }, modifier = Modifier.fillMaxWidth()) {
+            Button(onClick = onStart, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.guided_brew_start_timer))
             }
         }
