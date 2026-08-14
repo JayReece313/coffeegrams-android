@@ -114,6 +114,10 @@ dependencies {
     androidTestImplementation(libs.androidx.test.rules)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.kotlinx.coroutines.test)
+    // M10 screenshot harness — full-device screenshots (status bar included),
+    // which Compose's own captureToImage() can't do since it only sees the
+    // Compose content, not the system chrome around it.
+    androidTestImplementation(libs.androidx.test.uiautomator)
     debugImplementation(libs.compose.ui.test.manifest)
 }
 

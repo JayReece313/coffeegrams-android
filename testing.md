@@ -228,6 +228,48 @@ tapping it through to a real write — those screens read
 `currentApplication().brewLogStore` directly with no override seam yet;
 revisit if a future PR needs to assert the save itself.
 
+**Screenshot harness (M10):** `ScreenshotCaptureTest.kt` (top-level package,
+not scoped to one screen — it drives the whole app) mirrors the iOS
+sibling's `ScreenshotCaptureTests.swift`/`capture.sh` pattern: the same
+five assertion-only tests run in every normal `connectedAndroidTest` pass
+(so a button-text rename fails CI, the guard against the Play listing
+quietly going stale), while the actual shutter is opt-in behind a
+`captureScreenshots` instrumentation argument only
+`Releases/screenshots/capture.sh` sets — a plain suite run pays none of
+the screenshot cost. Unlike every other Compose UI test here, it uses
+`createAndroidComposeRule<MainActivity>()` (not `createComposeRule()` +
+an isolated `setContent {}`), driving the real app — real
+`CoffeeGramsApplication`, real Room, real navigation — the same way
+`XCUIApplication().launch()` does on iOS, since a screenshot of a test
+harness isn't a screenshot of what ships. Needs `GrantPermissionRule` for
+`POST_NOTIFICATIONS` for the same reason `GuidedBrewScreenTest` does
+(M9): starting a guided brew without it launches the real system
+permission dialog, which sits outside Compose's test tree and fails
+every assertion past that point with "no compose hierarchies found."
+
+Run `./Releases/screenshots/capture.sh` (optionally with one of
+`01-home`/`02-calculator`/`03-guided-timer`/`04-paywall`/`05-brew-log` to
+capture just one) to produce the actual listing images: it builds and
+installs both APKs, clears app data first (so the brew-log shot shows a
+clean single entry rather than accumulating across runs), pins the status
+bar to 9:41/full battery via Android's "Demo Mode" broadcasts (the direct
+equivalent of iOS's `simctl status_bar override`), runs the capture test
+with the shutter enabled, pulls the frames off the device, and fits each
+to 1080×1920 (Play's own recommended phone screenshot size — unlike
+Apple's exact-pixel-match requirement, Play actually accepts anything
+from 320–3840px per side at a 16:9–9:16 aspect ratio, so this fit-down is
+for consistency across the set, not because Play demands it). Needs a
+connected device/emulator, same assumption `connectedAndroidTest` already
+makes — this script doesn't boot one itself.
+
+One thing the `TOTAL` guided-timer assertion caught during development:
+`Thread.sleep()` on the test thread does **not** let the app's real tick
+loop advance, since it doesn't synchronize with Compose's own idling
+mechanism — a raw sleep left `TOTAL 0:00` frozen even after 8 real
+seconds. `composeTestRule.waitUntil { ... }` (which polls with genuine
+synchronization each iteration) is what actually lets real ticks land;
+worth remembering for any future capture-mode wait.
+
 ### 4. Build gates
 
 ```bash

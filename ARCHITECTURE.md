@@ -4,9 +4,10 @@ Two layers: a **pure Kotlin logic module** under a **thin Compose app**. Every
 side effect crosses a port. This mirrors the iOS app deliberately — the shared
 shape is what makes the two codebases maintainable in parallel.
 
-> **Status (2026-08-12):** M2–M8 complete, M9 in progress — code and unit/
-> instrumented tests done, physical-device Doze/backgrounding verification
-> pending. `:core` is fully ported: all 12 Models/Logic files and the
+> **Status (2026-08-14):** M2–M9 complete, M10 in progress — the
+> Play Store screenshot harness (`ScreenshotCaptureTest.kt` +
+> `Releases/screenshots/capture.sh`) is built and verified end-to-end;
+> full unit + Compose UI suites are green. `:core` is fully ported: all 12 Models/Logic files and the
 > `MonotonicClock` + `BrewLogStoring` ports, plus all 49 conformance tests
 > (`./gradlew :core:test`, headless, warnings-as-errors). The Compose theme
 > (`ui/theme/`) carries the real palette, type scale, and (new in M7) a
@@ -45,22 +46,31 @@ shape is what makes the two codebases maintainable in parallel.
 > graph already gives every route. **M7 shipped** (PR #10, merged
 > 2026-08-10). **M8 shipped** (PR #11, merged 2026-08-12): replaced the
 > `UnavailablePurchases` placeholder with `platform/LivePurchases.kt`, the
-> real `BillingClient` adapter. **M9 (in progress)** adds
-> `core/BrewSessionNotifier.kt`, a new port for the ongoing "brew in
-> progress" notification, backed by `platform/LiveBrewSessionNotifier.kt` +
-> a thin `platform/BrewTimerForegroundService.kt`. Its job is narrower than
-> it might sound: `GuidedBrewViewModel`'s tick loop and
+> real `BillingClient` adapter. **M9 shipped** (PR #12 + #14, merged
+> 2026-08-14 — split across two PRs because the first was merged before the
+> physical-device checklist ran; see `testing.md`'s M9 section for what
+> that checklist found and fixed): adds `core/BrewSessionNotifier.kt`, a
+> new port for the ongoing "brew in progress" notification, backed by
+> `platform/LiveBrewSessionNotifier.kt` + a thin
+> `platform/BrewTimerForegroundService.kt`. Its job is narrower than it
+> might sound: `GuidedBrewViewModel`'s tick loop and
 > `BrewTimerEngine.advance`'s elapsedRealtime-based catch-up already handle
-> a brief backgrounding the process survives (see the ports table below for
-> why); what was missing, and what M9 actually fixes, is Android killing the
-> *process* outright while a brew is backgrounded — a live foreground
-> service is what makes that rare. Scoped to guided brew only (V60, Chemex,
-> French Press, AeroPress), not espresso shots, which run 20-40 seconds and
-> don't carry the same backgrounding risk — see `PLAN.md`'s M9 row and the
-> reasoning in `GuidedBrewViewModel`'s doc comment. Code and unit/
-> instrumented tests are verified; the physical-device Doze/backgrounding
-> checklist in `testing.md` is not — that can only happen outside this
-> session. This document is updated as each milestone/PR lands.
+> a brief backgrounding the process survives; what was missing, and what M9
+> actually fixes, is Android killing the *process* outright while a brew is
+> backgrounded — a live foreground service is what makes that rare. Scoped
+> to guided brew only (V60, Chemex, French Press, AeroPress), not espresso
+> shots, which run 20-40 seconds and don't carry the same backgrounding
+> risk. **M10 (in progress)** adds the Play Store screenshot harness:
+> `ScreenshotCaptureTest.kt` mirrors the iOS sibling's
+> `ScreenshotCaptureTests.swift` exactly — the same five assertions run in
+> every normal `connectedAndroidTest` pass, guarding against the listing
+> going stale, while the shutter itself is opt-in behind a
+> `captureScreenshots` instrumentation argument only
+> `Releases/screenshots/capture.sh` sets. Unlike every other Compose UI
+> test in this repo, it drives the real app end-to-end
+> (`createAndroidComposeRule<MainActivity>()`, not an isolated screen +
+> test double) — a screenshot of a test harness isn't a screenshot of what
+> ships. This document is updated as each milestone/PR lands.
 
 ---
 
@@ -242,6 +252,8 @@ See [`testing.md`](testing.md) for how to run each suite.
 | `app/src/main/kotlin/.../ui/navigation/` | `CoffeeGramsNavHost`, type-safe `@Serializable` routes *(M7 PR1)* |
 | `app/src/main/kotlin/.../ui/methodpicker/`, `.../ui/calculator/`, `.../ui/paywall/` | Method Picker, Calculator, Paywall screens *(M7 PR1, done)* |
 | `app/src/androidTest/kotlin/.../ui/` | Compose UI tests per screen package, mirroring `main`'s layout |
+| `app/src/androidTest/kotlin/.../ScreenshotCaptureTest.kt` | The Play Store screenshot harness — top-level package since it drives the whole app, not one screen *(M10)* |
+| `Releases/screenshots/capture.sh` | Drives `ScreenshotCaptureTest` with the shutter enabled, pulls and fits the frames — mirrors the iOS sibling's own `capture.sh` *(M10)* |
 | `app/src/main/kotlin/.../ui/guidedbrew/`, `.../ui/espresso/`, `.../ui/coldbrew/` | Guided Brew, Espresso Shot, Cold Brew screens, routed through `BrewSessionScreen` *(M7 PR2, done)* |
 | `app/src/main/kotlin/.../ui/log/` | `LogScreen` (list), `LogDetailScreen` (view/rate/annotate/delete), `StarRating` *(M7 PR3, done)* |
 | `app/src/main/kotlin/.../data/` | `BrewLogEntity`, `BrewLogDao`, `BrewLogDatabase`, `RoomBrewLogStore` — the `BrewLogStoring` adapter |
