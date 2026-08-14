@@ -130,9 +130,13 @@ class ScreenshotCaptureTest {
         composeTestRule.onNodeWithText("Start Timer").performClick()
 
         // Bloom/fill/steep auto-advance; only the final (plunge) step holds
-        // for a tap, surfacing as "Done" once reached.
-        repeat(8) {
-            if (composeTestRule.onAllNodesWithText("Done").fetchSemanticsNodes().isNotEmpty()) return@repeat
+        // for a tap, surfacing as "Done" once reached. A plain for-loop, not
+        // repeat(8) { ... return@repeat ... } -- return@repeat only skips
+        // the current iteration, not the whole loop, so it kept "finding"
+        // Done and re-checking on every remaining iteration instead of
+        // actually stopping.
+        for (i in 0 until 8) {
+            if (composeTestRule.onAllNodesWithText("Done").fetchSemanticsNodes().isNotEmpty()) break
             val skip = composeTestRule.onAllNodesWithText("Skip step").fetchSemanticsNodes()
             if (skip.isNotEmpty()) composeTestRule.onNodeWithText("Skip step").performClick()
         }

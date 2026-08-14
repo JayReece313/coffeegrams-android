@@ -17,6 +17,16 @@ set -euo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."   # repo root, wherever it's called from
 
+# This script, like its iOS sibling (which hard-depends on xcrun/simctl), is
+# a manual macOS release-prep tool — nothing in this project's actual
+# workflow runs it anywhere else (no CI job touches it; see
+# .github/workflows/ci.yml). `sips` isn't portable, so fail fast with a
+# clear message instead of a cryptic "command not found" mid-run.
+if ! command -v sips >/dev/null 2>&1; then
+    echo "sips not found — this script needs macOS (it's used to fit the captured frames to size)." >&2
+    exit 1
+fi
+
 WANTED="${1:-}"
 OUT_DIR="Releases/screenshots"
 mkdir -p "$OUT_DIR"
@@ -24,6 +34,10 @@ WORK="$(mktemp -d)"
 
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
 export PATH="$PATH:$ANDROID_HOME/platform-tools"
+if ! command -v adb >/dev/null 2>&1; then
+    echo "adb not found under \$ANDROID_HOME/platform-tools ($ANDROID_HOME) — set ANDROID_HOME or check your SDK install." >&2
+    exit 1
+fi
 
 APP_ID="com.jrlabapps.coffeegrams"
 TEST_RUNNER="$APP_ID.test/androidx.test.runner.AndroidJUnitRunner"
@@ -62,7 +76,11 @@ echo "▸ building (Debug)"
 
 # Fresh app state for every capture run: a stale Room brew log from a
 # previous run would otherwise accumulate near-duplicate entries in the
-# 05-brew-log shot rather than showing a clean, real first-run scene.
+# 05-brew-log shot rather than showing a clean, real first-run scene. This
+# also clears any screenshots/ left on-device from a prior run (uninstall
+# removes the app's external-files-dir with it) — combined with the
+# zero-files check below, that's what stops a run that silently produced
+# no *new* frames from appearing to succeed off old ones.
 adb uninstall "$APP_ID" >/dev/null 2>&1 || true
 adb install -r "app/build/outputs/apk/debug/app-debug.apk" >/dev/null
 adb install -r "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk" >/dev/null
@@ -112,6 +130,7 @@ adb pull "$DEVICE_SCREENSHOT_DIR" "$WORK/pulled" >/dev/null
 # exact-pixel-match requirement (any size from 320-3840px per side, 16:9 to
 # 9:16 aspect is actually accepted), this fit-down is for consistency across
 # the set, not because Play demands it.
+PROCESSED=0
 for shot in "$WORK"/pulled/screenshots/*.png; do
     [ -f "$shot" ] || continue
     name="$(basename "$shot")"
@@ -120,6 +139,21 @@ for shot in "$WORK"/pulled/screenshots/*.png; do
     echo "▸ $name: ${dims% }"
     [ "$dims" = "1080 1920 " ] || { echo "  ✗ expected 1080 1920" >&2; exit 1; }
     cp "$shot" "$OUT_DIR/$name"
+    PROCESSED=$((PROCESSED + 1))
 done
 
-echo "▸ done"   # the status bar and demo mode are undone by the EXIT trap
+# The test reporting "OK" only proves the assertions passed, not that any
+# capture() call actually ran (captureScreenshots could be unset/false, the
+# glob above could silently match nothing) — this is what turns a would-be
+# false "done" into a real failure instead of leaving stale tracked assets
+# untouched with no warning.
+if [ "$PROCESSED" -eq 0 ]; then
+    echo "no screenshots were produced — check the instrument log above" >&2
+    exit 1
+fi
+if [ -n "$WANTED" ] && [ ! -f "$OUT_DIR/$WANTED.png" ]; then
+    echo "expected $OUT_DIR/$WANTED.png but it wasn't produced" >&2
+    exit 1
+fi
+
+echo "▸ done ($PROCESSED screenshot(s))"   # the status bar and demo mode are undone by the EXIT trap
