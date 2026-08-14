@@ -85,10 +85,21 @@ fun GuidedBrewScreen(timeline: BrewTimeline, doseGrams: Double, ratio: Double, m
         },
     )
     // Doesn't gate start() on the result — see GuidedBrewViewModel's doc
-    // comment for why the timer itself doesn't need to wait on this.
+    // comment for why the timer itself doesn't need to wait on this. Still
+    // surfaces the outcome, though: silently leaving the user with no idea
+    // why they never see brew progress in the background would be worse
+    // than cold brew's equivalent "reminder couldn't be scheduled" state.
+    var notificationsUnavailable by remember { mutableStateOf(false) }
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
-    ) {}
+    ) {
+        // Don't trust the raw grant result — mirrors ColdBrewScreen's own
+        // reasoning: POST_NOTIFICATIONS can report granted while the user
+        // has notifications disabled for the app in Settings, in which case
+        // the launcher fires with no dialog and `true` even though nothing
+        // will actually be shown.
+        notificationsUnavailable = !viewModel.canShowSessionNotification()
+    }
 
     val phase by viewModel.phase.collectAsStateWithLifecycle()
     val currentStepIndex by viewModel.currentStepIndex.collectAsStateWithLifecycle()
@@ -156,6 +167,14 @@ fun GuidedBrewScreen(timeline: BrewTimeline, doseGrams: Double, ratio: Double, m
                 hasStarted = hasStarted,
             )
 
+            if (hasStarted && notificationsUnavailable) {
+                Text(
+                    stringResource(R.string.guided_brew_notifications_unavailable),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.smallSpacing)) {
                 timeline.steps.forEachIndexed { index, step ->
                     val state = when {
@@ -173,7 +192,9 @@ fun GuidedBrewScreen(timeline: BrewTimeline, doseGrams: Double, ratio: Double, m
                 savedToLog = savedToLog,
                 isSaving = isSaving,
                 onStart = {
-                    if (!viewModel.canShowSessionNotification()) {
+                    val alreadyGranted = viewModel.canShowSessionNotification()
+                    notificationsUnavailable = !alreadyGranted
+                    if (!alreadyGranted) {
                         notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                     }
                     viewModel.start()
