@@ -10,6 +10,7 @@ import com.jrlabapps.coffeegrams.core.BrewTimerEvent
 import com.jrlabapps.coffeegrams.core.BrewTimerPhase
 import com.jrlabapps.coffeegrams.core.Haptics
 import com.jrlabapps.coffeegrams.core.MonotonicClock
+import com.jrlabapps.coffeegrams.core.NotificationScheduling
 import com.jrlabapps.coffeegrams.design.TimeFormat
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -45,12 +46,27 @@ import kotlin.math.floor
  * [MonotonicClock.now] (`elapsedRealtime`-backed, keeps advancing through
  * Doze) and [BrewTimerEngine.advance] was built to fast-forward by exactly
  * that delta.
+ *
+ * [notifications] reuses the same [NotificationScheduling] port cold brew
+ * already depends on for its own `POST_NOTIFICATIONS` prompt — confirmed on
+ * a real device that without it, [sessionNotifier]'s notification is
+ * silently suppressed by the OS (no crash, no signal, just invisible),
+ * since guided brew previously had no permission-request path of its own at
+ * all. [canShowSessionNotification] mirrors
+ * [ColdBrewViewModel.canScheduleReminders] exactly: a state check only —
+ * the actual system prompt can only be shown from the UI layer via
+ * `rememberLauncherForActivityResult`, never from a plain ViewModel/adapter.
+ * Unlike cold brew, [start] doesn't wait on the prompt's result: the timer
+ * itself doesn't depend on notification permission to function correctly,
+ * only the notification's visibility does, so blocking brew start on it
+ * would trade real-time responsiveness for no actual benefit.
  */
 class GuidedBrewViewModel(
     val timeline: BrewTimeline,
     private val clock: MonotonicClock,
     private val haptics: Haptics,
     private val sessionNotifier: BrewSessionNotifier,
+    private val notifications: NotificationScheduling,
 ) : ViewModel() {
 
     private val engine = BrewTimerEngine(timeline)
@@ -96,6 +112,9 @@ class GuidedBrewViewModel(
         engine.onEvent = { event -> handle(event) }
         syncFromEngine()
     }
+
+    /** Whether the OS will actually show [sessionNotifier]'s notification right now — does not itself prompt. */
+    fun canShowSessionNotification(): Boolean = notifications.requestAuthorization()
 
     // MARK: Derived view state
 

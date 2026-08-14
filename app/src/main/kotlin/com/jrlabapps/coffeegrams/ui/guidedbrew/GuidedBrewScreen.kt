@@ -1,7 +1,10 @@
 package com.jrlabapps.coffeegrams.ui.guidedbrew
 
+import android.Manifest
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -70,9 +73,33 @@ fun GuidedBrewScreen(timeline: BrewTimeline, doseGrams: Double, ratio: Double, m
     val application = currentApplication()
     val viewModel: GuidedBrewViewModel = viewModel(
         factory = viewModelFactory {
-            initializer { GuidedBrewViewModel(timeline, application.clock, application.haptics, application.brewSessionNotifier) }
+            initializer {
+                GuidedBrewViewModel(
+                    timeline,
+                    application.clock,
+                    application.haptics,
+                    application.brewSessionNotifier,
+                    application.notificationScheduler,
+                )
+            }
         },
     )
+    // Doesn't gate start() on the result — see GuidedBrewViewModel's doc
+    // comment for why the timer itself doesn't need to wait on this. Still
+    // surfaces the outcome, though: silently leaving the user with no idea
+    // why they never see brew progress in the background would be worse
+    // than cold brew's equivalent "reminder couldn't be scheduled" state.
+    var notificationsUnavailable by remember { mutableStateOf(false) }
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) {
+        // Don't trust the raw grant result — mirrors ColdBrewScreen's own
+        // reasoning: POST_NOTIFICATIONS can report granted while the user
+        // has notifications disabled for the app in Settings, in which case
+        // the launcher fires with no dialog and `true` even though nothing
+        // will actually be shown.
+        notificationsUnavailable = !viewModel.canShowSessionNotification()
+    }
 
     val phase by viewModel.phase.collectAsStateWithLifecycle()
     val currentStepIndex by viewModel.currentStepIndex.collectAsStateWithLifecycle()
@@ -140,6 +167,14 @@ fun GuidedBrewScreen(timeline: BrewTimeline, doseGrams: Double, ratio: Double, m
                 hasStarted = hasStarted,
             )
 
+            if (hasStarted && notificationsUnavailable) {
+                Text(
+                    stringResource(R.string.guided_brew_notifications_unavailable),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.smallSpacing)) {
                 timeline.steps.forEachIndexed { index, step ->
                     val state = when {
@@ -156,6 +191,14 @@ fun GuidedBrewScreen(timeline: BrewTimeline, doseGrams: Double, ratio: Double, m
                 phase = phase,
                 savedToLog = savedToLog,
                 isSaving = isSaving,
+                onStart = {
+                    val alreadyGranted = viewModel.canShowSessionNotification()
+                    notificationsUnavailable = !alreadyGranted
+                    if (!alreadyGranted) {
+                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                    viewModel.start()
+                },
                 onSave = {
                     isSaving = true
                     scope.launch {
@@ -276,6 +319,7 @@ private fun Controls(
     phase: BrewTimerPhase,
     savedToLog: Boolean,
     isSaving: Boolean,
+    onStart: () -> Unit,
     onSave: () -> Unit,
     onBrewAgain: () -> Unit,
 ) {
@@ -294,7 +338,7 @@ private fun Controls(
             }
         }
         BrewTimerPhase.IDLE -> {
-            Button(onClick = { viewModel.start() }, modifier = Modifier.fillMaxWidth()) {
+            Button(onClick = onStart, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.guided_brew_start_timer))
             }
         }

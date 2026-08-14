@@ -66,6 +66,7 @@
     <string name="guided_brew_leave_message">Your timer will be lost.</string>
     <string name="guided_brew_leave_confirm">Leave</string>
     <string name="guided_brew_leave_cancel">Cancel</string>
+    <string name="guided_brew_notifications_unavailable">Notifications are off — enable them in Settings to see brew progress if you leave the app</string>
 
     <!-- Espresso shot (M7 PR2) -->
     <string name="espresso_dose_label">Dose</string>
