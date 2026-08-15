@@ -4,7 +4,7 @@ Two layers: a **pure Kotlin logic module** under a **thin Compose app**. Every
 side effect crosses a port. This mirrors the iOS app deliberately — the shared
 shape is what makes the two codebases maintainable in parallel.
 
-> **Status (2026-08-14):** M2–M9 complete, M10 in progress — the
+> **Status (2026-08-14):** M2–M10 complete, M11 in progress — the
 > Play Store screenshot harness (`ScreenshotCaptureTest.kt` +
 > `Releases/screenshots/capture.sh`) is built and verified end-to-end;
 > full unit + Compose UI suites are green. `:core` is fully ported: all 12 Models/Logic files and the
@@ -60,8 +60,8 @@ shape is what makes the two codebases maintainable in parallel.
 > backgrounded — a live foreground service is what makes that rare. Scoped
 > to guided brew only (V60, Chemex, French Press, AeroPress), not espresso
 > shots, which run 20-40 seconds and don't carry the same backgrounding
-> risk. **M10 (in progress)** adds the Play Store screenshot harness:
-> `ScreenshotCaptureTest.kt` mirrors the iOS sibling's
+> risk. **M10 shipped** (PR #15, merged 2026-08-14): the Play Store
+> screenshot harness — `ScreenshotCaptureTest.kt` mirrors the iOS sibling's
 > `ScreenshotCaptureTests.swift` exactly — the same five assertions run in
 > every normal `connectedAndroidTest` pass, guarding against the listing
 > going stale, while the shutter itself is opt-in behind a
@@ -70,7 +70,15 @@ shape is what makes the two codebases maintainable in parallel.
 > test in this repo, it drives the real app end-to-end
 > (`createAndroidComposeRule<MainActivity>()`, not an isolated screen +
 > test double) — a screenshot of a test harness isn't a screenshot of what
-> ships. This document is updated as each milestone/PR lands.
+> ships. **M11 (in progress)** is store listing & compliance prep, not app
+> code: a Play Store icon (512×512) and feature graphic (1024×500) under
+> `Releases/store-assets/`, draft listing copy (`Releases/store-listing.md`),
+> a Play Console compliance answers runbook
+> (`Releases/play-console-compliance.md`), and a `docs/` GitHub Pages site
+> (privacy policy + support) — a separate copy from the iOS repo's own
+> `docs/`, not reused as-is, since the iOS pages name SwiftData/App
+> Store/Apple by name and would misdescribe this app. This document is
+> updated as each milestone/PR lands.
 
 ---
 
