@@ -1,0 +1,7 @@
+title: CoffeeGrams for Android
+description: A precise, privacy-first coffee brewing companion for Android.
+theme: jekyll-theme-cayman
+baseurl: "/coffeegrams-android"
+# README is developer-facing hosting notes, not a published page.
+exclude:
+  - README.md

@@ -12,7 +12,7 @@ The iOS original is live on the App Store and lives in a separate repo ([`JayRee
 | **Min / Target / Compile SDK** | 26 (Android 8.0) / 36 (Android 16) / 37.1 |
 | **Toolchain** | AGP 9.3.1 · Kotlin 2.4.10 · Gradle 9.7.0 · JDK 21 |
 | **Monetization** | One non-consumable, `com.jrlabapps.coffeegrams.pro`, $4.99 |
-| **Privacy** | No accounts, no ads, no analytics, no third-party SDKs — Data safety declares *no data collected* |
+| **Privacy** | No accounts, no ads, no analytics, no tracking SDKs (Google Play Billing is the one non-AndroidX dependency, used only to process the Pro purchase) — Data safety declares *no data collected* |
 
 ---
 
@@ -47,6 +47,9 @@ Work **one milestone per session** (see Cost & context efficiency in `CLAUDE.md`
 | `DESIGN.md` | Palette, 60-30-10 rules, Material 3 mapping | When visual design changes |
 | `testing.md` | Test strategy and how to run each suite | When suites are added or commands change |
 | `Releases/submission_<version>.md` | As-built Play Store runbook | At each release |
+| `Releases/store-listing.md`, `Releases/play-console-compliance.md` | Draft Play listing copy + compliance-form answers *(M11)* | Before the store-listing/compliance forms are actually entered in Play Console |
+| `Releases/store-assets/` | Play Store icon (512×512) + feature graphic (1024×500), and the scripts that generate them *(M11)* | When brand art or the tagline changes |
+| `docs/` | GitHub Pages site — privacy policy + support, this app's own copy (not the iOS repo's) *(M11)* | When privacy/support facts change (price, free tier, contact) |
 | `gradle/libs.versions.toml` | Every dependency and SDK version, in one place | Adding or bumping any dependency — never hard-code a version in a module script |
 | `.github/workflows/ci.yml` | Build + test on every push and PR | When a suite or build gate is added |
 
@@ -94,19 +97,23 @@ These are the cross-file consistency rules that break silently if ignored:
 
 ### Status / what's next
 
-As of **2026-08-08**:
+As of **2026-08-14**:
 
-- ✅ Planning complete; plan approved.
-- ✅ Repo created (public); local + GitHub kanban boards populated with M0–M13.
-- ✅ D-U-N-S number already issued to JR Labs LLC — the usual 30-day lead time does not apply.
 - ✅ **M0** — Google Play developer account registered as an **organization** under JR Labs LLC. That account type is what exempts this app from the 12-tester / 14-day closed-test gate.
-- ✅ **M1** — Gradle scaffold, `:core` / `:app` module split, version catalog, CI, and the doc set (`ARCHITECTURE.md`, `DESIGN.md`, `testing.md`). All four gates green: `:core:test`, `:app:testDebugUnitTest`, debug build, release build.
-- ✅ **M2** — all 12 `CoffeeGramsCore` Swift sources ported to pure Kotlin, plus all 49 test cases (`BrewCalculatorTest` 11, `BrewMethodProfileTest` 7, `BrewTimelineBuilderTest` 11, `BrewTimerEngineTest` 20). All four gates green, `:core` compiles with `allWarningsAsErrors`.
-- ✅ **M3** — Material 3 `ColorScheme` (light + dark) and type scale from the 6 iOS color tokens, `BrewMethod`'s placeholder icon mapping ported, and the real adaptive icon + standalone logo mark transliterated from `coffeegrams_logo/render.swift` (replacing the M1 placeholder cup silhouette). All four gates green, including a real-device visual check of the launcher icon.
+- ✅ **M1** — Gradle scaffold, `:core` / `:app` module split, version catalog, CI, and the doc set (`ARCHITECTURE.md`, `DESIGN.md`, `testing.md`). All four gates green.
+- ✅ **M2** — all 12 `CoffeeGramsCore` Swift sources ported to pure Kotlin, plus all 49 conformance test cases. `:core` compiles with `allWarningsAsErrors`.
+- ✅ **M3** — Material 3 theme from the iOS color tokens, plus the real adaptive icon + standalone logo mark transliterated from `coffeegrams_logo/render.swift`.
+- ✅ **M4** — Room-backed `BrewLogStoring` adapter mirroring `BrewLogRecord`'s 11 columns, plus an in-memory test double.
+- ✅ **M5** — platform adapters: `MonotonicClock`, `Haptics`, and `Notifications` (notification channel + `WorkManager` + `ReminderWorker`).
+- ✅ **M6** — ViewModels (`CalculatorViewModel`, `GuidedBrewViewModel`, `EspressoShotViewModel`, `ColdBrewViewModel`, `PurchaseController`), the first real callers of the M5 ports.
+- ✅ **M7** (PR #10, merged 2026-08-10) — the full Compose UI: Method Picker, Calculator, Paywall, the three brewing screens, and the brew log + detail screens, wired through a type-safe navigation graph.
+- ✅ **M8** (PR #11, merged 2026-08-12) — real Play Billing (`platform/LivePurchases.kt`) replacing the M7 placeholder adapter.
+- ✅ **M9** (PR #12 + #14, merged 2026-08-14) — a foreground service keeping guided brews alive while backgrounded, plus the `POST_NOTIFICATIONS` permission request the physical-device checklist caught missing.
+- ✅ **M10** (PR #15, merged 2026-08-14) — the Play Store screenshot harness (`ScreenshotCaptureTest.kt` + `Releases/screenshots/capture.sh`), five shots at 1080×1920 under `Releases/screenshots/`.
 - ✅ **Play Small Business Program** — applied for and confirmed opted in (15% fee rate).
 - ✅ **Physical Android test device acquired** — the M8 hardware blocker (Play Billing cannot be tested on the emulator) is cleared.
-- ⬜ **Next: M4** — persistence: Room entity mirroring `BrewLogRecord`'s 11 columns, DAO, and the `BrewLogStoring` port + in-memory test double.
-- ⬜ **Still to confirm in Play Console:** organization verification has cleared (the Small Business Program opt-in succeeding is a good sign, but this wasn't separately reconfirmed).
+- ⬜ **In progress: M11** — store listing & compliance: Play Store icon + feature graphic (`Releases/store-assets/`), draft listing copy (`Releases/store-listing.md`), a Play Console compliance answers runbook (`Releases/play-console-compliance.md`), and an Android-specific `docs/` GitHub Pages site (privacy + support — a separate copy from the iOS repo's, not reused as-is). Not yet entered into Play Console.
+- ⬜ **Next: M12** — release: keystore + Play App Signing, AAB build, Internal testing → Production staged rollout.
 
 **Local emulator note:** a known AVD system-image crash and workaround for the primary dev Mac is documented in [`testing.md`](testing.md#prerequisites) — check there before creating a new AVD.
 
