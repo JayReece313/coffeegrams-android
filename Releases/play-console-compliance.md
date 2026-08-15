@@ -16,10 +16,12 @@ verified 2026-08-14 — confirm this is still where it lives when we get
 there).
 
 CoffeeGrams collects **zero** user data — no accounts, no analytics, no
-ads, no third-party SDKs (`app/build.gradle.kts` has exactly one runtime
-dependency outside AndroidX/Kotlin: `billing-ktx`, and Play Billing
-purchase processing doesn't route personal data through us — Google
-handles that entirely).
+ads. `app/build.gradle.kts` has exactly one non-AndroidX/Kotlin runtime
+dependency, `billing-ktx` (Google Play Billing), used solely to process the
+one-time Pro purchase — it doesn't route personal data through us, Google
+handles that entirely. That's the one SDK in the app; it's not an
+analytics/tracking/ad SDK, which is what the Data safety form's questions
+are actually probing for.
 
 - **"Does your app collect or share any of the required user data types?"**
   → **No**.

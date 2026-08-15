@@ -12,8 +12,10 @@ permalink: /privacy/
 ## The short version
 
 **CoffeeGrams does not collect, store, transmit, or share any personal
-information.** There are no accounts, no analytics, no advertising, no trackers,
-and no third-party SDKs.
+information.** There are no accounts, no analytics, no advertising, and no
+trackers. The only non-Android-platform library the app includes is Google
+Play Billing, used solely to process the one-time Pro purchase (see below) —
+it does not collect data on our behalf.
 
 ## What data the app handles
 
@@ -34,7 +36,8 @@ and no third-party SDKs.
 - We do **not** collect personal data.
 - We do **not** use analytics or advertising.
 - We do **not** track you across apps or websites.
-- We do **not** use any third-party SDKs.
+- We do **not** use any third-party SDKs beyond Google Play Billing, which
+  only processes the one-time Pro purchase.
 
 ## Children
 

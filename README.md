@@ -12,7 +12,7 @@ The iOS original is live on the App Store and lives in a separate repo ([`JayRee
 | **Min / Target / Compile SDK** | 26 (Android 8.0) / 36 (Android 16) / 37.1 |
 | **Toolchain** | AGP 9.3.1 · Kotlin 2.4.10 · Gradle 9.7.0 · JDK 21 |
 | **Monetization** | One non-consumable, `com.jrlabapps.coffeegrams.pro`, $4.99 |
-| **Privacy** | No accounts, no ads, no analytics, no third-party SDKs — Data safety declares *no data collected* |
+| **Privacy** | No accounts, no ads, no analytics, no tracking SDKs (Google Play Billing is the one non-AndroidX dependency, used only to process the Pro purchase) — Data safety declares *no data collected* |
 
 ---
 
