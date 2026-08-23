@@ -9,7 +9,28 @@ whatever's on screen, the same way M8's billing setup went.
 
 ---
 
-## 1. Data safety form
+## 1. Target audience and content
+
+**App content → Target audience and content** (Play Console gates the Data
+safety form behind this one completing first — encountered live
+2026-08-22, not something the original draft of this runbook anticipated).
+
+- **Target age group(s):** select **only "Ages 18 and over."** Nothing else.
+  Selecting any bracket under 18 (and especially under 13) pulls the app
+  into Google Play Families policy requirements — extra content and data
+  rules that don't fit a coffee/caffeine product with no child-directed
+  design. Sticking to 18+ only also skips every Families follow-up
+  question the form would otherwise ask.
+- **"Does your app's design or content appeal to children even if it's not
+  the target audience?"** (or equivalent wording) → **No.**
+- **Ads** (if asked here rather than under Data safety) → **No** — the app
+  has no ad SDK.
+
+Verified against Google's own current help page for this section
+(`support.google.com/googleplay/android-developer/answer/9867159`) rather
+than guessed, per the navigation-caution lesson from M8.
+
+## 2. Data safety form
 
 **App content → Data safety → Start** (per Google's current help page,
 verified 2026-08-14 — confirm this is still where it lives when we get
@@ -39,7 +60,7 @@ are actually probing for.
 Expected result on the listing: **"No data shared with third parties" /
 "No data collected."**
 
-## 2. IARC content rating questionnaire
+## 3. IARC content rating questionnaire
 
 **App content → Content rating** (verify current path on screen).
 
@@ -57,7 +78,7 @@ no web browser, nothing that would raise a rating above the floor:
   the lowest tier (Android's rough equivalent of iOS's 4+) since it's the
   only flag raised.
 
-## 3. EU trader (DSA) declaration
+## 4. EU trader (DSA) declaration
 
 **App content → EU business/trader details** (verify current path — this
 section has been renamed and relocated even within the App content page
@@ -78,7 +99,7 @@ don't want.
   back after publish.
 - **Email:** info@jrlabapps.com
 
-## 4. Store listing text & assets
+## 5. Store listing text & assets
 
 Covered separately in `Releases/store-listing.md` (title, descriptions,
 category) and `Releases/store-assets/` (512×512 icon, 1024×500 feature
