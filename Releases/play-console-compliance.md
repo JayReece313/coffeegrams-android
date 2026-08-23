@@ -78,26 +78,43 @@ no web browser, nothing that would raise a rating above the floor:
   the lowest tier (Android's rough equivalent of iOS's 4+) since it's the
   only flag raised.
 
-## 4. EU trader (DSA) declaration
+## 4. EU trader (DSA) status
 
-**App content → EU business/trader details** (verify current path — this
-section has been renamed and relocated even within the App content page
-across recent Play Console revisions).
+**Correction (2026-08-23):** there is no separate "declare trader status"
+screen in current Play Console — confirmed both by hitting a dead end
+looking for one under App content, and by the user's own research into
+Google's current stated behavior. **Google infers trader status
+automatically** from two existing account-level settings, both under the
+left-nav **Settings** section (account-level, not per-app "App content" —
+that's why it wasn't findable there):
 
-Declare as a **Trader**, not "not a trader" — same reasoning as the iOS
-submission (`coffeegrams/Releases/submission_1.0.md` §6): CoffeeGrams Pro
-is a paid product sold commercially through JR Labs LLC. Declaring
-"not a trader" removes the app from EU storefronts entirely, which we
-don't want.
+1. **Settings → Developer account → Details.** If **Account Type =
+   Organization**, Google treats the account as a trader by default and
+   publishes the business address to EU users. This is already true here —
+   the account was registered as an **Organization** under **JR Labs LLC**
+   at M0 (see `README.md`'s M0 line) — so this half is already satisfied,
+   just worth opening this page to confirm the legal name/address on file
+   is current and correct before EU users start seeing it published.
+2. **Settings → Payment profile.** An active merchant profile processing
+   paid apps/IAPs triggers the trader flag, and publishes that profile's
+   legal name, address, phone, and email to EU users. A payments profile
+   should already exist from M8's Play Billing setup (the "CoffeeGrams
+   Pro" IAP requires one to process payments) — confirm it's active and
+   the published contact details are correct, same "worth a look before it
+   goes live" reasoning as #1.
+
+So the task here isn't "declare Trader" (there's nothing to click) — it's
+**verify both pages show accurate, already-public-safe business info**,
+since whatever's on them ships to EU users automatically once the app is
+live. If neither page reflects a commercial/organization setup for some
+reason, that's the actual problem to fix, not a missing declaration.
 
 - **Business name:** JR Labs LLC
-- **Contact details** (public, per DSA requirement): reuse whatever
-  registered-agent/business address and phone were used for the iOS trader
-  declaration — pull the actual values from wherever that was recorded for
-  the iOS submission rather than re-typing from memory here, since a wrong
-  public business address is the kind of mistake that's annoying to walk
-  back after publish.
 - **Email:** info@jrlabapps.com
+- Address/phone: whatever is currently on the Developer account Details
+  and Payment profile pages — pull the actual values from there rather
+  than retyping from memory, since a wrong public business address is
+  the kind of mistake that's annoying to walk back after publish.
 
 ## 5. Store listing text & assets
 
