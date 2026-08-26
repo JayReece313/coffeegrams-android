@@ -81,7 +81,9 @@ shape is what makes the two codebases maintainable in parallel.
 > Main store listing are entered and complete in Play Console. **M12 (in
 > progress)** is the release milestone: upload keystore + signing config,
 > Play App Signing enrollment, AAB build, Internal testing → physical-device
-> validation → Production staged rollout. This document is updated as each
+> validation → Production (a brand-new app's first release has no staged
+> rollout — that only applies to updates, see
+> `Releases/play-console-release.md`). This document is updated as each
 > milestone/PR lands.
 
 ---

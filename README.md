@@ -113,7 +113,7 @@ As of **2026-08-26**:
 - ✅ **Play Small Business Program** — applied for and confirmed opted in (15% fee rate).
 - ✅ **Physical Android test device acquired** — the M8 hardware blocker (Play Billing cannot be tested on the emulator) is cleared.
 - ✅ **M11** (PR #16 + #17, merged 2026-08-15/26) — Play Store icon + feature graphic (`Releases/store-assets/`), listing copy (`Releases/store-listing.md`), a Play Console compliance runbook (`Releases/play-console-compliance.md`), and an Android-specific `docs/` GitHub Pages site (privacy + support — a separate copy from the iOS repo's, not reused as-is, live at [jayreece313.github.io/coffeegrams-android](https://jayreece313.github.io/coffeegrams-android/)). App content and the Main store listing are entered and complete in Play Console.
-- ⬜ **In progress: M12** — release: keystore + Play App Signing, AAB build, Internal testing → Production staged rollout.
+- ⬜ **In progress: M12** — release: keystore + Play App Signing, AAB build, Internal testing → physical-device validation → Production (a brand-new app's first release has no staged rollout — see `Releases/play-console-release.md`).
 
 **Local emulator note:** a known AVD system-image crash and workaround for the primary dev Mac is documented in [`testing.md`](testing.md#prerequisites) — check there before creating a new AVD.
 
