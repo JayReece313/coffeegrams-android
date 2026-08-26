@@ -32,7 +32,7 @@ Work **one milestone per session** (see Cost & context efficiency in `CLAUDE.md`
 - One branch **per unit of work**, not per commit — multiple commits may share a branch.
 - Keep local `main` clean and matching the remote.
 - **Only commit or push when asked.**
-- A **Qodo review** runs on every push. Drive findings to **zero** before merging or calling a milestone done.
+- A **Qodo review** and a **Claude auto-review** (`.github/workflows/claude-auto-review.yml`) both run on every PR push — Qodo's has been intermittently unavailable (trial/billing lapses), Claude's is the reliable fallback. Drive findings from whichever ran to **zero** before merging or calling a milestone done. A separate `@claude`-mention workflow (`.github/workflows/claude.yml` / `claude-code-review.yml`) is also available for an on-demand review or question on any PR or issue.
 - Debug **and** Release must build warning-free (warnings-as-errors on Release) before a milestone is done.
 
 ### Where things live
