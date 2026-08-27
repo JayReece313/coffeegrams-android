@@ -4,7 +4,7 @@ Two layers: a **pure Kotlin logic module** under a **thin Compose app**. Every
 side effect crosses a port. This mirrors the iOS app deliberately — the shared
 shape is what makes the two codebases maintainable in parallel.
 
-> **Status (2026-08-14):** M2–M10 complete, M11 in progress — the
+> **Status (2026-08-26):** M2–M11 complete, M12 in progress — the
 > Play Store screenshot harness (`ScreenshotCaptureTest.kt` +
 > `Releases/screenshots/capture.sh`) is built and verified end-to-end;
 > full unit + Compose UI suites are green. `:core` is fully ported: all 12 Models/Logic files and the
@@ -70,15 +70,21 @@ shape is what makes the two codebases maintainable in parallel.
 > test in this repo, it drives the real app end-to-end
 > (`createAndroidComposeRule<MainActivity>()`, not an isolated screen +
 > test double) — a screenshot of a test harness isn't a screenshot of what
-> ships. **M11 (in progress)** is store listing & compliance prep, not app
-> code: a Play Store icon (512×512) and feature graphic (1024×500) under
-> `Releases/store-assets/`, draft listing copy (`Releases/store-listing.md`),
-> a Play Console compliance answers runbook
+> ships. **M11 shipped** (PR #16 + #17, merged 2026-08-15/26): store
+> listing & compliance, not app code — a Play Store icon (512×512) and
+> feature graphic (1024×500) under `Releases/store-assets/`, listing copy
+> (`Releases/store-listing.md`), a Play Console compliance answers runbook
 > (`Releases/play-console-compliance.md`), and a `docs/` GitHub Pages site
-> (privacy policy + support) — a separate copy from the iOS repo's own
-> `docs/`, not reused as-is, since the iOS pages name SwiftData/App
-> Store/Apple by name and would misdescribe this app. This document is
-> updated as each milestone/PR lands.
+> (privacy policy + support, live) — a separate copy from the iOS repo's
+> own `docs/`, not reused as-is, since the iOS pages name SwiftData/App
+> Store/Apple by name and would misdescribe this app. App content and the
+> Main store listing are entered and complete in Play Console. **M12 (in
+> progress)** is the release milestone: upload keystore + signing config,
+> Play App Signing enrollment, AAB build, Internal testing → physical-device
+> validation → Production (a brand-new app's first release has no staged
+> rollout — that only applies to updates, see
+> `Releases/play-console-release.md`). This document is updated as each
+> milestone/PR lands.
 
 ---
 

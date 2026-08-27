@@ -91,7 +91,7 @@ You get one significant break and one significant new constraint.
 
 **Review itself is easier than Apple's.** Play review is largely automated with human spot-checks. First submissions from a new account often take **several days to a week**; subsequent updates are frequently hours. There's no equivalent of Apple's design-subjectivity rejections. Expect fewer rounds than the App Store.
 
-**Release strategy:** publish to the **Internal testing** track first (up to 100 testers, no review delay, available in minutes) to validate the signed release build and the billing flow on your device. Then promote to Production with a **staged rollout** — Play lets you release to 20% of users and halt if crash rates spike, which has no App Store equivalent and is worth using.
+**Release strategy:** publish to the **Internal testing** track first (up to 100 testers, no review delay, available in minutes) to validate the signed release build and the billing flow on your device. Then promote to Production. **Correction (M12):** staged rollout only applies to *updates* to an already-published app — a brand-new app's first Production release goes to 100% of users immediately, no percentage option. Internal testing is the real safety net for v1.0; staged rollout becomes available (and worth using — Play lets you halt it if crash rates spike, no App Store equivalent) starting with the first post-launch update.
 
 **Required before you can submit** (Play's equivalents of Apple's checklist):
 - **Data safety form** — Android's App Privacy label. Declares "no data collected," matching the iOS label.
@@ -231,7 +231,7 @@ Sequenced so the calendar-bound account work runs in parallel with code.
 | **M9** | **Background timer hardening** | Foreground service + `elapsedRealtime` resume-recompute. Test: screen off mid-brew, app swiped away, Doze, device rotation, incoming call. |
 | **M10** | Test suites & screenshots | Full unit + Compose UI suites green; screenshot harness (Compose UI Test + `adb`) producing Play-spec listing images with on-screen string assertions, mirroring `capture.sh`. |
 | **M11** | Store listing & compliance | Title (≤30 chars — *"CoffeeGrams: Brew Calculator"* is 28, fits), short (≤80) + full (≤4000) descriptions, 512×512 icon, 1024×500 feature graphic, phone screenshots, Data safety form, content rating, trader status, privacy/support URLs. |
-| **M12** | Release | Upload keystore generated **and backed up** (losing it is unrecoverable), Play App Signing enrolled, AAB built, Internal testing → validate on device → Production with staged rollout. `Releases/submission_1.0.md` written as-built. |
+| **M12** | Release | Upload keystore generated **and backed up** (losing it is unrecoverable), Play App Signing enrolled, AAB built, Internal testing → validate on device → Production (first release: 100% immediately, no staged rollout). `Releases/submission_1.0.md` written as-built. |
 | **M13** | Retrospective | `CoffeeGramsAndroid_Summary.md` in the private `Summary` repo, plus a copy of `ARCHITECTURE.md`, including the standing **"where could AI agents help?"** process review. |
 
 **With the D-U-N-S already in hand, the critical path moves back to the code** — specifically M2 (core port) → M7 (UI) → M9 (background timer). M0 still starts on day one so account verification clears well before M8 needs a live Play Console listing to test billing against.
