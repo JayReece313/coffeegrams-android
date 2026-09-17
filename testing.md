@@ -435,14 +435,12 @@ prompt's result the way cold brew's flow does.
 | 7 | Leave a brew running into Doze | Step transitions still land | ✅ 2026-08-14, via `dumpsys deviceidle force-idle` |
 | 8 | Rotate the device mid-brew | Timer survives configuration change | ✅ 2026-08-14 |
 | 9 | Take an incoming call mid-brew | Timer survives | Covered by generalization from checks 5–8, not directly tested — the test device has no cellular radio. A call interrupts the app the same way backgrounding does; nothing about a call gets different process-lifecycle treatment on Android. |
-| 10 | Schedule a cold brew, wait 12–24 h | Notification arrives; **modest Doze drift is acceptable** and is not a bug | Pending — pre-existing M5 functionality, not new M9 work |
+| 10 | Schedule a cold brew, wait 12–24 h | Notification arrives; **modest Doze drift is acceptable** and is not a bug | ✅ live device, 2026-09-16 (M12) |
 | 11 | Deny the notification permission | App remains fully usable | ✅ observed directly, 2026-08-14 — checks 5 and the first attempt at check 6 both ran correctly (brew progressed, no crash) while `POST_NOTIFICATIONS` was still denied, before the fix above; only the notification's visibility was affected |
 
 ---
 
 ## Cross-platform parity check
-
-Do this once on real devices before M12, in addition to the automated suites.
 
 For each of the six brew methods: run a representative dose and ratio through
 **both** the iOS app and the Android app side by side and diff the results, then
@@ -451,6 +449,12 @@ total time. Any divergence is a port bug in `:core`.
 
 The 49 conformance cases should catch this mechanically. The manual pass is there
 because "should" is doing real work in that sentence.
+
+✅ **2026-09-15, both physical devices** — V60 (20g, 1:16), Chemex (20g,
+1:16), French Press (20g, 1:15), AeroPress (15g, 1:18), Cold Brew (100g,
+1:5 concentrate), Espresso (18g, 1:2): calculator outputs, guided-timeline
+step order/durations, and total time all matched between the two apps.
+No divergence found.
 
 ---
 
