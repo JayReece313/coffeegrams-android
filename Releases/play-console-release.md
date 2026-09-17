@@ -66,21 +66,21 @@ what's actually on screen).
   doesn't need full store-listing info to go out to existing testers.
 - Confirm your existing license tester(s) from M8 can install the build.
 
-## 4. Physical-device validation (do this before Production, not after)
+## 4. Physical-device validation — done
 
-Exactly two checks are still open per `testing.md` (everything else in
-PLAN.md's pre-M12 list — purchase acknowledgement, restore, lock-screen
-timer continuity, deny-notification-permission — is already done, see
-that file's M8/M9 tables):
+Both checks that were open are now complete, on real devices:
 
 1. **Cross-platform parity** (`testing.md`, "Cross-platform parity check"
-   section): for each of the 6 brew methods, run a representative
-   dose/ratio and the full guided timeline through both the iOS and
-   Android apps side by side, diff the results. Any divergence is a
-   `:core` port bug.
-2. **Cold brew notification delivery** (`testing.md` check #10): schedule
-   a cold brew, wait 12-24h, confirm the notification arrives. Modest Doze
-   drift is fine.
+   section) — ✅ 2026-09-15. All 6 brew methods (V60, Chemex, French
+   Press, AeroPress, Cold Brew, Espresso): calculator output and guided
+   timeline (step order, durations, total time) matched exactly between
+   the iOS and Android apps. No divergence found.
+2. **Cold brew notification delivery** (`testing.md` check #10) — ✅
+   2026-09-16, live device.
+
+Everything else in PLAN.md's pre-M12 list — purchase acknowledgement,
+restore, lock-screen timer continuity, deny-notification-permission — was
+already done, see `testing.md`'s M8/M9 tables.
 
 **Not reopening:** decline-payment-instrument / already-owned-purchase
 (`testing.md` checks 3-4) — deliberately left at unit-test + review
@@ -89,8 +89,8 @@ this; it's a considered decision on record, not a gap.
 
 ## 5. Promote to Production
 
-**Only after step 4 is clean, and only with your explicit go-ahead in the
-moment** — I won't initiate this myself. Left nav → **Production** →
+**Validation is clean (step 4) — this step now only waits on your explicit
+go-ahead in the moment** — I won't initiate this myself. Left nav → **Production** →
 create a release → add the same AAB (or promote the Internal testing
 release directly, Play supports promoting a release from one track to
 another without re-uploading) → **Start rollout to production**.
@@ -111,7 +111,8 @@ is the point of that document.
 
 ---
 
-*Draft — none of these steps have been executed yet. Steps 1 (keystore)
-and 3/5 (Play Console uploads/rollout) are yours to run; I'll build the
-signed AAB (step 2) once `keystore.properties` exists, and help interpret
-whatever Play Console shows at each step.*
+*Steps 1-4 are done: keystore generated and backed up, signed AAB built
+and verified, uploaded to Internal testing (versionCode 2, after
+versionCode 1 was consumed by a failed first attempt), and both physical-
+device validation checks passed. Steps 5 (Production) and 6 (as-built
+submission doc) remain — step 5 stays gated on your explicit go-ahead.*
