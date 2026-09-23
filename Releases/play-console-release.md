@@ -89,18 +89,35 @@ this; it's a considered decision on record, not a gap.
 
 ## 5. Promote to Production
 
-**Validation is clean (step 4) — this step now only waits on your explicit
-go-ahead in the moment** — I won't initiate this myself. Left nav → **Production** →
-create a release → add the same AAB (or promote the Internal testing
-release directly, Play supports promoting a release from one track to
-another without re-uploading) → **Start rollout to production**.
+As established above: a first release publishes to **100% of users
+immediately** once live, whatever countries/regions are selected — there
+is no staged-rollout percentage. To keep the actual go-live moment a
+deliberate action rather than something that happens silently whenever
+Google finishes reviewing, **Managed publishing** was turned on first
+(Play Console → Publishing overview → "Managed publishing status" → Turn
+on managed publishing → Save) — this holds an approved release in a
+"Changes ready to publish" state until you manually click **Publish
+changes**, instead of auto-publishing on approval.
 
-As established above: this publishes to **100% of users immediately** in
-whatever countries/regions are selected — there is no staged-rollout
-percentage for a first release. Double-check the countries/regions
-selection and the store listing (already complete per M11) one more time
-before clicking, since there's no gradual-exposure safety net to catch a
-mistake here the way there would be on a later update.
+**Extra App content item found along the way, not in the original
+runbook:** Play's April 2026 policy update requires a description **and**
+a demo video link for the `FOREGROUND_SERVICE_SPECIAL_USE` permission
+(`BrewTimerForegroundService`, M9). Recorded via `scrcpy` (mirroring +
+recording the physical device from the Mac, over USB — avoided the
+overlay/UI problems every on-device screen recorder tried on the Galaxy
+A15 introduced), trimmed to the relevant ~95s, uploaded to YouTube
+unlisted, and submitted with a description covering why the timer can't
+be paused/restarted (the physical brew keeps happening in real time
+regardless of what the phone is doing).
+
+**Status: ✅ 2026-09-23** — App content fully complete ("You're all
+caught up" per Play Console), release previewed/confirmed, and **sent to
+Google for review**. Typical first-submission review is hours to about a
+week (per `PLAN.md`). No Play Developer API access is set up in this
+project, so review status has to be checked manually in Play Console —
+it can't be polled automatically. Once approved, it lands in "Changes
+ready to publish"; **Publish changes** is the final, explicit click that
+actually goes live, still gated on real-time go-ahead.
 
 ## 6. `Releases/submission_1.0.md`
 
@@ -111,8 +128,10 @@ is the point of that document.
 
 ---
 
-*Steps 1-4 are done: keystore generated and backed up, signed AAB built
+*Steps 1-5 are done: keystore generated and backed up, signed AAB built
 and verified, uploaded to Internal testing (versionCode 2, after
-versionCode 1 was consumed by a failed first attempt), and both physical-
-device validation checks passed. Steps 5 (Production) and 6 (as-built
-submission doc) remain — step 5 stays gated on your explicit go-ahead.*
+versionCode 1 was consumed by a failed first attempt), both physical-
+device validation checks passed, and the Production release has been
+sent to Google for review (managed publishing on, so approval won't
+auto-publish). Only step 6 (as-built submission doc, written once this
+fully lands) and the final **Publish changes** click remain.*
