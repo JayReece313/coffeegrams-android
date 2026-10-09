@@ -6,7 +6,7 @@ The iOS original is live on the App Store and lives in a separate repo ([`JayRee
 
 | | |
 |---|---|
-| **Status** | M4 complete — Room-backed persistence landed; platform adapters (M5) is next |
+| **Status** | **v1.0 is live on Google Play** (2026-10-08) — M12 release done; M13 retrospective is next |
 | **Target** | Google Play, v1.0, feature parity with iOS 1.1 |
 | **Package** | `com.jrlabapps.coffeegrams` |
 | **Min / Target / Compile SDK** | 26 (Android 8.0) / 36 (Android 16) / 37.1 |
@@ -97,7 +97,7 @@ These are the cross-file consistency rules that break silently if ignored:
 
 ### Status / what's next
 
-As of **2026-08-26**:
+As of **2026-10-08**:
 
 - ✅ **M0** — Google Play developer account registered as an **organization** under JR Labs LLC. That account type is what exempts this app from the 12-tester / 14-day closed-test gate.
 - ✅ **M1** — Gradle scaffold, `:core` / `:app` module split, version catalog, CI, and the doc set (`ARCHITECTURE.md`, `DESIGN.md`, `testing.md`). All four gates green.
@@ -113,7 +113,8 @@ As of **2026-08-26**:
 - ✅ **Play Small Business Program** — applied for and confirmed opted in (15% fee rate).
 - ✅ **Physical Android test device acquired** — the M8 hardware blocker (Play Billing cannot be tested on the emulator) is cleared.
 - ✅ **M11** (PR #16 + #17, merged 2026-08-15/26) — Play Store icon + feature graphic (`Releases/store-assets/`), listing copy (`Releases/store-listing.md`), a Play Console compliance runbook (`Releases/play-console-compliance.md`), and an Android-specific `docs/` GitHub Pages site (privacy + support — a separate copy from the iOS repo's, not reused as-is, live at [jayreece313.github.io/coffeegrams-android](https://jayreece313.github.io/coffeegrams-android/)). App content and the Main store listing are entered and complete in Play Console.
-- ⬜ **In progress: M12** — release: keystore + Play App Signing, AAB build, Internal testing → physical-device validation → Production (a brand-new app's first release has no staged rollout — see `Releases/play-console-release.md`).
+- ✅ **M12** (live 2026-10-08) — release: keystore + Play App Signing, signed AAB (versionCode 2), Internal testing → physical-device validation → Production, full rollout to 178 countries (a brand-new app's first release has no staged rollout). Public listing: [play.google.com/store/apps/details?id=com.jrlabapps.coffeegrams](https://play.google.com/store/apps/details?id=com.jrlabapps.coffeegrams). As-built runbook, including the "Published ≠ Production" mix-up and its diagnosis checklist: [`Releases/submission_1.0.md`](Releases/submission_1.0.md).
+- ⬜ **Next: M13** — retrospective in the private `Summary` repo (`CoffeeGramsAndroid_Summary.md` + a copy of `ARCHITECTURE.md`), including the AI-agents process review. Start it in a fresh session.
 
 **Local emulator note:** a known AVD system-image crash and workaround for the primary dev Mac is documented in [`testing.md`](testing.md#prerequisites) — check there before creating a new AVD.
 

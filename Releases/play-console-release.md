@@ -110,28 +110,23 @@ unlisted, and submitted with a description covering why the timer can't
 be paused/restarted (the physical brew keeps happening in real time
 regardless of what the phone is doing).
 
-**Status: ✅ 2026-09-23** — App content fully complete ("You're all
-caught up" per Play Console), release previewed/confirmed, and **sent to
-Google for review**. Typical first-submission review is hours to about a
-week (per `PLAN.md`). No Play Developer API access is set up in this
-project, so review status has to be checked manually in Play Console —
-it can't be polled automatically. Once approved, it lands in "Changes
-ready to publish"; **Publish changes** is the final, explicit click that
-actually goes live, still gated on real-time go-ahead.
+**Status: ✅ LIVE 2026-10-08.** App content was complete on 2026-09-23,
+but the Production release was **not** actually submitted then — an empty
+Production draft was left behind, and the first "Publish changes" click
+(2026-10-07) only released the Closed testing – Alpha track. The Production
+release was completed and sent for review on 2026-10-08, approved the same
+day, and published with **Publish 1 change**. Verify any "submitted"
+claim in the console (Latest releases and bundles → Production row), not
+from notes. No Play Developer API access is set up in this project, so
+review status has to be checked manually in Play Console. Full as-built
+sequence and the diagnosis checklist: `Releases/submission_1.0.md`.
 
 ## 6. `Releases/submission_1.0.md`
 
-Write this as-built once steps 1-5 actually happen, mirroring the iOS
-sibling's own as-built doc — not drafted speculatively ahead of time,
-since the exact sequence (timestamps, what got clicked when, any hiccups)
-is the point of that document.
+✅ Written as-built — see `Releases/submission_1.0.md`.
 
 ---
 
-*Steps 1-5 are done: keystore generated and backed up, signed AAB built
-and verified, uploaded to Internal testing (versionCode 2, after
-versionCode 1 was consumed by a failed first attempt), both physical-
-device validation checks passed, and the Production release has been
-sent to Google for review (managed publishing on, so approval won't
-auto-publish). Only step 6 (as-built submission doc, written once this
-fully lands) and the final **Publish changes** click remain.*
+*Steps 1-6 are done. v1.0 (versionCode 2) is live on Google Play as of
+2026-10-08. Remaining: M12 board card to Done after the PR carrying the
+as-built doc merges, then M13 (retrospective).*
