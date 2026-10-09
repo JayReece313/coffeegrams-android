@@ -4,7 +4,7 @@ Two layers: a **pure Kotlin logic module** under a **thin Compose app**. Every
 side effect crosses a port. This mirrors the iOS app deliberately — the shared
 shape is what makes the two codebases maintainable in parallel.
 
-> **Status (2026-08-26):** M2–M11 complete, M12 in progress — the
+> **Status (2026-10-09):** M2–M12 complete — v1.0 is live on Google Play. The
 > Play Store screenshot harness (`ScreenshotCaptureTest.kt` +
 > `Releases/screenshots/capture.sh`) is built and verified end-to-end;
 > full unit + Compose UI suites are green. `:core` is fully ported: all 12 Models/Logic files and the
@@ -78,12 +78,12 @@ shape is what makes the two codebases maintainable in parallel.
 > (privacy policy + support, live) — a separate copy from the iOS repo's
 > own `docs/`, not reused as-is, since the iOS pages name SwiftData/App
 > Store/Apple by name and would misdescribe this app. App content and the
-> Main store listing are entered and complete in Play Console. **M12 (in
-> progress)** is the release milestone: upload keystore + signing config,
-> Play App Signing enrollment, AAB build, Internal testing → physical-device
-> validation → Production (a brand-new app's first release has no staged
-> rollout — that only applies to updates, see
-> `Releases/play-console-release.md`). This document is updated as each
+> Main store listing are entered and complete in Play Console. **M12 (complete,
+> live 2026-10-08)** was the release milestone: upload keystore + signing
+> config, Play App Signing enrollment, AAB build, Internal testing →
+> physical-device validation → Production (a brand-new app's first release
+> has no staged rollout — that only applies to updates; the as-built record is
+> `Releases/submission_1.0.md`). This document is updated as each
 > milestone/PR lands.
 
 ---
